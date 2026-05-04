@@ -1,0 +1,68 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/payroute_hub?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    open-in-view: false
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+payroute:
+  webhook:
+    poll-ms: 10000
+    # Auto-seed a default fan-out endpoint on startup (no manual UI setup needed).
+    # To disable, set enabled: false. Deliveries land in the DB and show on the Webhooks page.
+    seed:
+      enabled: true
+      # Default sink: notification-service's own actuator/health returns 200 for every POST attempt,
+      # so deliveries flow end-to-end without any extra receiver. Override with WEBHOOK_SEED_URL
+      # to point at a real server (e.g. http://localhost:7070/ for the echo script).
+      url: ${WEBHOOK_SEED_URL:http://localhost:8086/internal/webhook-sink}
+      name: "Default (auto-seeded)"
+      user-id: 0        # 0 = fan-out to all users' events
+      events: "*"
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.payroute.notification: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-}] [%X{spanId:-}] %-5level %logger{36} - %msg%n"

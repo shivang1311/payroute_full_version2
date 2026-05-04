@@ -1,0 +1,124 @@
+server:
+  port: 9080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # IAM Service Routes
+        - id: iam-auth
+          uri: lb://iam-service
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: iam-users
+          uri: lb://iam-service
+          predicates:
+            - Path=/api/v1/users/**
+        - id: iam-audit
+          uri: lb://iam-service
+          predicates:
+            - Path=/api/v1/audit/**
+
+        # Party Service Routes
+        - id: party-service-parties
+          uri: lb://party-service
+          predicates:
+            - Path=/api/v1/parties/**
+        - id: party-service-accounts
+          uri: lb://party-service
+          predicates:
+            - Path=/api/v1/accounts/**
+
+        # Payment Service Routes
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/v1/payments/**
+
+        # Routing Service Routes
+        - id: routing-service
+          uri: lb://routing-service
+          predicates:
+            - Path=/api/v1/routing/**
+
+        # Ledger Service Routes
+        - id: ledger-service
+          uri: lb://ledger-service
+          predicates:
+            - Path=/api/v1/ledger/**
+
+        # Notification Service Routes
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/v1/notifications/**
+        - id: notification-service-webhooks
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/v1/webhooks/**
+
+        # Compliance Service Routes
+        - id: compliance-service
+          uri: lb://compliance-service
+          predicates:
+            - Path=/api/v1/compliance/**
+
+        # Exception Service Routes
+        - id: exception-service-exceptions
+          uri: lb://exception-service
+          predicates:
+            - Path=/api/v1/exceptions/**
+        - id: exception-service-returns
+          uri: lb://exception-service
+          predicates:
+            - Path=/api/v1/returns/**
+        - id: exception-service-reconciliation
+          uri: lb://exception-service
+          predicates:
+            - Path=/api/v1/reconciliation/**
+
+        # Settlement Service Routes
+        - id: settlement-service-settlement
+          uri: lb://settlement-service
+          predicates:
+            - Path=/api/v1/settlement/**
+        - id: settlement-service-reports
+          uri: lb://settlement-service
+          predicates:
+            - Path=/api/v1/reports/**
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: ${JWT_SECRET:PayRouteHub2026SecureJWTSecretKeyForTokenSigningMinimum256Bits!}
+
+payroute:
+  gateway:
+    open-paths: /api/v1/auth/login,/api/v1/auth/register,/api/v1/auth/refresh
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO

@@ -1,0 +1,224 @@
+/* ============================================================
+   PayRoute Hub — global styles
+   Light + dark design tokens, smooth scrollbars, focus rings,
+   page transitions, consistent card hover, table polish.
+   ============================================================ */
+
+:root {
+  /* Brand */
+  --pr-brand-1: #5b5bf0;
+  --pr-brand-2: #8855ff;
+  --pr-brand-grad: linear-gradient(135deg, #5b5bf0 0%, #8855ff 100%);
+  --pr-brand-grad-soft: linear-gradient(135deg, rgba(91,91,240,0.08) 0%, rgba(136,85,255,0.08) 100%);
+
+  /* Status accents */
+  --pr-success: #16a34a;
+  --pr-warning: #f59e0b;
+  --pr-error:   #ef4444;
+  --pr-info:    #3b82f6;
+
+  /* Surfaces (light) */
+  --pr-bg:          #f4f5fb;
+  --pr-bg-elevated: #ffffff;
+  --pr-surface:     #ffffff;
+  --pr-border:      #e5e7eb;
+  --pr-text:        #1f2937;
+  --pr-text-muted:  #6b7280;
+
+  /* Shadows */
+  --pr-shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04), 0 1px 1px rgba(17, 24, 39, 0.03);
+  --pr-shadow-md: 0 4px 14px rgba(17, 24, 39, 0.06), 0 2px 4px rgba(17, 24, 39, 0.04);
+  --pr-shadow-lg: 0 20px 48px rgba(17, 24, 39, 0.10), 0 8px 16px rgba(17, 24, 39, 0.06);
+
+  /* Misc */
+  --pr-radius: 10px;
+  --pr-radius-lg: 16px;
+}
+
+html[data-theme='dark'] {
+  --pr-bg:          #0f1117;
+  --pr-bg-elevated: #161a23;
+  --pr-surface:     #1a1f2b;
+  --pr-border:      #2a3040;
+  --pr-text:        #e6e8ee;
+  --pr-text-muted:  #9aa3b2;
+
+  --pr-brand-grad-soft: linear-gradient(135deg, rgba(91,91,240,0.18) 0%, rgba(136,85,255,0.18) 100%);
+
+  --pr-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --pr-shadow-md: 0 4px 18px rgba(0, 0, 0, 0.45);
+  --pr-shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--pr-bg);
+  color: var(--pr-text);
+}
+
+#root { width: 100%; height: 100%; }
+
+/* ---------- Scrollbar ---------- */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 140, 0.32);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: rgba(120, 120, 140, 0.55); background-clip: padding-box; }
+
+/* ---------- Focus rings (keyboard only) ---------- */
+:focus-visible {
+  outline: 2px solid var(--pr-brand-1);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Page transitions ---------- */
+@keyframes pr-fade-in-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ant-layout-content > * {
+  animation: pr-fade-in-up 260ms ease-out;
+}
+
+/* ---------- AntD polish ---------- */
+.ant-card {
+  box-shadow: var(--pr-shadow-sm);
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+.ant-card.ant-card-hoverable:hover {
+  box-shadow: var(--pr-shadow-lg);
+  transform: translateY(-2px);
+}
+.ant-card-head { border-bottom-color: var(--pr-border); }
+
+.ant-layout { background: var(--pr-bg) !important; }
+.ant-layout-sider {
+  box-shadow: var(--pr-shadow-sm);
+}
+
+.ant-menu-inline .ant-menu-item,
+.ant-menu-inline .ant-menu-submenu-title {
+  border-radius: 8px;
+  margin-inline: 8px !important;
+  width: calc(100% - 16px) !important;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.ant-menu-light.ant-menu-inline .ant-menu-item-selected {
+  background: var(--pr-brand-grad-soft) !important;
+  color: var(--pr-brand-1) !important;
+  font-weight: 600;
+}
+
+.ant-btn-primary {
+  box-shadow: 0 4px 12px rgba(91, 91, 240, 0.24);
+}
+
+.ant-table-thead > tr > th {
+  background: var(--pr-brand-grad-soft) !important;
+  font-weight: 600 !important;
+}
+
+.ant-statistic-title {
+  font-size: 13px !important;
+  color: var(--pr-text-muted) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 600;
+}
+
+/* ---------- Reusable gradient-icon stat card ---------- */
+.pr-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(91, 91, 240, 0.28);
+  margin-bottom: 8px;
+}
+.pr-stat-icon.brand    { background: var(--pr-brand-grad); }
+.pr-stat-icon.success  { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); box-shadow: 0 8px 20px rgba(22,163,74,0.28); }
+.pr-stat-icon.warning  { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); box-shadow: 0 8px 20px rgba(245,158,11,0.28); }
+.pr-stat-icon.error    { background: linear-gradient(135deg, #fb7185 0%, #ef4444 100%); box-shadow: 0 8px 20px rgba(239,68,68,0.28); }
+.pr-stat-icon.info     { background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); box-shadow: 0 8px 20px rgba(59,130,246,0.28); }
+.pr-stat-icon.purple   { background: linear-gradient(135deg, #c084fc 0%, #9333ea 100%); box-shadow: 0 8px 20px rgba(147,51,234,0.28); }
+.pr-stat-icon.teal     { background: linear-gradient(135deg, #5eead4 0%, #14b8a6 100%); box-shadow: 0 8px 20px rgba(20,184,166,0.28); }
+
+/* ---------- Reusable page header ---------- */
+.pr-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--pr-border);
+  flex-wrap: wrap;
+}
+.pr-page-header-title { font-size: 22px; font-weight: 700; color: var(--pr-text); margin: 0; }
+.pr-page-header-subtitle { font-size: 13px; color: var(--pr-text-muted); margin-top: 4px; }
+
+/* ---------- Login responsive — hide brand panel on small screens ---------- */
+@media (max-width: 900px) {
+  .pr-login-brand { display: none !important; }
+}
+
+/* ---------- Table row hover cursor nicety ---------- */
+.ant-table-tbody > tr.ant-table-row:hover > td {
+  cursor: default;
+}
+
+/* ---------- Subtle card entry shimmer on load ---------- */
+.ant-card {
+  border-color: var(--pr-border) !important;
+}
+
+/* ---------- Menu submenu title polish ---------- */
+.ant-menu-inline .ant-menu-submenu-title {
+  font-weight: 500;
+}
+
+/* ---------- Tag polish ---------- */
+.ant-tag {
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 0 8px;
+}
+
+/* ---------- Notification rows (themable in light + dark) ---------- */
+.pr-notif-row {
+  border: 1px solid var(--pr-border);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.pr-notif-row--read {
+  background: transparent;
+}
+.pr-notif-row--unread {
+  background: var(--pr-brand-grad-soft);
+  border-left: 3px solid var(--pr-brand-1);
+}
+.pr-notif-row--unread:hover {
+  border-color: var(--pr-brand-1);
+}
+html[data-theme='dark'] .pr-notif-row--unread {
+  background: linear-gradient(135deg, rgba(91,91,240,0.20) 0%, rgba(136,85,255,0.20) 100%);
+}
+html[data-theme='dark'] .pr-notif-row .ant-list-item-meta-description,
+html[data-theme='dark'] .pr-notif-row .ant-typography {
+  color: var(--pr-text);
+}
