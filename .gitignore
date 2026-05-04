@@ -1,0 +1,109 @@
+# =================================================================
+# PayRoute Hub — .gitignore
+# =================================================================
+
+# ----- Java / Maven -----
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+.mvn/wrapper/maven-wrapper.jar
+.flattened-pom.xml
+
+# Maven generated sources (MapStruct impls, etc.)
+**/generated-sources/
+**/generated-test-sources/
+
+# Maven local-repo plugin artifacts
+**/project-local-repo/
+
+# Surefire / Failsafe test reports
+**/surefire-reports/
+**/failsafe-reports/
+
+# ----- IDE -----
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+*.swp
+*.swo
+*~
+
+# ----- OS -----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ----- Logs -----
+# Catches the per-service log files (payment.log, party.log, exception.log, etc.)
+*.log
+logs/
+**/logs/
+
+# Spring Boot console captures
+**/spring.log
+**/application.log
+
+# ----- Environment / Secrets -----
+.env
+.env.*
+!.env.example
+*.env.local
+**/application-local.yml
+**/application-local.yaml
+**/application-local.properties
+**/application-secrets.yml
+**/application-secrets.yaml
+**/secrets.properties
+*.pem
+*.key
+*.p12
+*.jks
+
+# ----- Frontend (Node / Vite) -----
+**/node_modules/
+**/dist/
+**/build/
+**/.cache/
+**/.vite/
+**/.parcel-cache/
+**/.eslintcache
+**/.turbo/
+
+# Vite & TS build info
+**/*.tsbuildinfo
+**/vite.config.ts.timestamp-*
+**/vite.config.js.timestamp-*
+
+# Yarn / npm / pnpm — keep lockfiles, ignore the rest
+**/yarn-error.log
+**/npm-debug.log*
+**/pnpm-debug.log*
+**/.pnp.*
+
+# ----- Test coverage -----
+**/coverage/
+**/.nyc_output/
+**/jacoco.exec
+**/jacoco-it.exec
+
+# ----- Claude / scratch -----
+.claude/
+**/.claude/
+*.bak
+*.tmp
+*.orig
+*.rej
