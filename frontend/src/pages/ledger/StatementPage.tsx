@@ -15,7 +15,7 @@ import {
   message,
   Empty,
 } from 'antd';
-import { DownloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { DownloadOutlined, SearchOutlined, FilePdfOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import dayjs, { Dayjs } from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
@@ -23,6 +23,7 @@ import { statementApi } from '../../api/statement.api';
 import { accountApi } from '../../api/party.api';
 import { useAuthStore } from '../../stores/authStore';
 import { paymentRef } from '../../utils/paymentRef';
+import { downloadStatementPdf } from '../../utils/statementPdf';
 import type { Statement, StatementLine, EntryType } from '../../types/statement';
 import type { Account } from '../../types';
 
@@ -76,6 +77,26 @@ const StatementPage: React.FC = () => {
       message.error('Failed to load statement');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const downloadPdf = async () => {
+    if (!data) return;
+    const vals = await form.validateFields();
+    const [from, to] = vals.range;
+    try {
+      const acct = myAccounts.find((a) => a.id === vals.accountId);
+      downloadStatementPdf(data, {
+        isCustomer,
+        from: from.format('YYYY-MM-DD'),
+        to: to.format('YYYY-MM-DD'),
+        accountLabel: acct
+          ? `${acct.accountNumber} · ${acct.currency}${acct.accountType ? ' · ' + acct.accountType : ''}`
+          : `#${vals.accountId}`,
+      });
+    } catch (err) {
+      const e = err as { message?: string };
+      message.error(e?.message || 'Failed to generate PDF');
     }
   };
 
@@ -231,6 +252,13 @@ const StatementPage: React.FC = () => {
               onClick={downloadCsv}
             >
               Download CSV
+            </Button>
+            <Button
+              icon={<FilePdfOutlined />}
+              disabled={!data}
+              onClick={downloadPdf}
+            >
+              Download PDF
             </Button>
           </Space>
         </Form.Item>

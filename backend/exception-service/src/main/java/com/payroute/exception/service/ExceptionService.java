@@ -4,8 +4,10 @@ import com.payroute.exception.client.NotificationServiceClient;
 import com.payroute.exception.dto.client.NotificationRequest;
 import com.payroute.exception.dto.request.ExceptionCaseRequest;
 import com.payroute.exception.dto.response.ExceptionCaseResponse;
+import com.payroute.exception.dto.response.ExceptionStatsResponse;
 import com.payroute.exception.dto.response.PagedResponse;
 import com.payroute.exception.entity.ExceptionCase;
+import com.payroute.exception.entity.ExceptionCategory;
 import com.payroute.exception.entity.ExceptionStatus;
 import com.payroute.exception.exception.ResourceNotFoundException;
 import com.payroute.exception.mapper.ExceptionCaseMapper;
@@ -18,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -70,17 +74,30 @@ public class ExceptionService {
     }
 
     public PagedResponse<ExceptionCaseResponse> getExceptions(ExceptionStatus status, Pageable pageable) {
-        return getExceptions(status, null, pageable);
+        return getExceptions(status, null, null, pageable);
     }
 
     public PagedResponse<ExceptionCaseResponse> getExceptions(ExceptionStatus status, Long ownerId, Pageable pageable) {
+        return getExceptions(status, null, ownerId, pageable);
+    }
+
+    public PagedResponse<ExceptionCaseResponse> getExceptions(
+            ExceptionStatus status, ExceptionCategory category, Long ownerId, Pageable pageable) {
         Page<ExceptionCase> page;
-        if (status != null && ownerId != null) {
+        if (status != null && category != null && ownerId != null) {
+            page = exceptionCaseRepository.findByStatusAndCategoryAndOwnerId(status, category, ownerId, pageable);
+        } else if (status != null && category != null) {
+            page = exceptionCaseRepository.findByStatusAndCategory(status, category, pageable);
+        } else if (status != null && ownerId != null) {
             page = exceptionCaseRepository.findByStatusAndOwnerId(status, ownerId, pageable);
-        } else if (ownerId != null) {
-            page = exceptionCaseRepository.findByOwnerId(ownerId, pageable);
+        } else if (category != null && ownerId != null) {
+            page = exceptionCaseRepository.findByCategoryAndOwnerId(category, ownerId, pageable);
         } else if (status != null) {
             page = exceptionCaseRepository.findByStatus(status, pageable);
+        } else if (category != null) {
+            page = exceptionCaseRepository.findByCategory(category, pageable);
+        } else if (ownerId != null) {
+            page = exceptionCaseRepository.findByOwnerId(ownerId, pageable);
         } else {
             page = exceptionCaseRepository.findAll(pageable);
         }
@@ -151,5 +168,38 @@ public class ExceptionService {
         exceptionCase = exceptionCaseRepository.save(exceptionCase);
         log.info("Updated exception case {}", id);
         return exceptionCaseMapper.toResponse(exceptionCase);
+    }
+
+    /**
+     * Global aggregate counts for the Exception Queue dashboard cards.
+     * Always operates on the full dataset (no filter applied) so the
+     * header stats always reflect the true state of the queue.
+     */
+    public ExceptionStatsResponse getStats() {
+        // Status counts
+        List<Object[]> rows = exceptionCaseRepository.countByStatus();
+        Map<ExceptionStatus, Long> byStatus = new EnumMap<>(ExceptionStatus.class);
+        long total = 0;
+        for (Object[] row : rows) {
+            ExceptionStatus status = (ExceptionStatus) row[0];
+            long count = ((Number) row[1]).longValue();
+            byStatus.put(status, count);
+            total += count;
+        }
+
+        // SLA breach: non-terminal cases older than 24 hours
+        LocalDateTime threshold = LocalDateTime.now().minusHours(24);
+        long slaBreached = exceptionCaseRepository.countSlaBreached(
+                List.of(ExceptionStatus.RESOLVED, ExceptionStatus.CLOSED), threshold);
+
+        return ExceptionStatsResponse.builder()
+                .total(total)
+                .open(byStatus.getOrDefault(ExceptionStatus.OPEN, 0L))
+                .inProgress(byStatus.getOrDefault(ExceptionStatus.IN_PROGRESS, 0L))
+                .escalated(byStatus.getOrDefault(ExceptionStatus.ESCALATED, 0L))
+                .resolved(byStatus.getOrDefault(ExceptionStatus.RESOLVED, 0L))
+                .closed(byStatus.getOrDefault(ExceptionStatus.CLOSED, 0L))
+                .slaBreached(slaBreached)
+                .build();
     }
 }

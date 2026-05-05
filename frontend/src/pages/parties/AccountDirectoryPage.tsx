@@ -9,6 +9,7 @@ import { accountApi } from '../../api/party.api';
 import { useAuthStore } from '../../stores/authStore';
 import type { Account, AliasType } from '../../types';
 import { SearchOutlined } from '@ant-design/icons';
+import { EMAIL_PATTERN, EMAIL_VALIDATION_MESSAGE } from '../../utils/emailValidation';
 
 const accountTypeOptions = [
   'SAVINGS', 'CURRENT', 'SALARY', 'NRE', 'NRO', 'OVERDRAFT', 'LOAN', 'FIXED_DEPOSIT',
@@ -170,7 +171,15 @@ const AccountDirectoryPage: React.FC = () => {
   };
 
   const validateVpaUpiId = (_: unknown, value: string) => {
+    // Customers must register both an IFSC and a UPI/VPA so beneficiary lookups
+    // by VPA work end-to-end. Staff users may leave VPA empty.
     if (!value || value.trim() === '') {
+      if (isCustomer) {
+        const currency = form.getFieldValue('currency');
+        return Promise.reject(
+          new Error(currency === 'INR' ? 'UPI ID is required' : 'VPA ID is required')
+        );
+      }
       return Promise.resolve();
     }
     const currency = form.getFieldValue('currency');
@@ -454,6 +463,7 @@ const AccountDirectoryPage: React.FC = () => {
             label="IFSC/IBAN"
             name="ifscIban"
             dependencies={['currency']}
+            required
             rules={[{ validator: validateIfscIban }]}
             extra={
               currencyValue === 'INR'
@@ -475,6 +485,7 @@ const AccountDirectoryPage: React.FC = () => {
             label={currencyValue === 'INR' ? 'UPI ID' : 'VPA ID'}
             name="vpaUpiId"
             dependencies={['currency']}
+            required={isCustomer}
             rules={[{ validator: validateVpaUpiId }]}
             extra={
               currencyValue === 'INR'
@@ -521,7 +532,10 @@ const AccountDirectoryPage: React.FC = () => {
           <Form.Item
             label="Email alias"
             name="email"
-            rules={[{ type: 'email', message: 'Enter a valid email address' }]}
+            rules={[
+              { type: 'email', message: 'Enter a valid email address' },
+              { pattern: EMAIL_PATTERN, message: EMAIL_VALIDATION_MESSAGE },
+            ]}
           >
             <Input placeholder="Optional email alias (e.g. ops@example.com)" />
           </Form.Item>

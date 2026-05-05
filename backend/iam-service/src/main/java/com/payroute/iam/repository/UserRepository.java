@@ -22,4 +22,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByPhone(String phone);
 
     List<User> findByRoleAndTransactionPinHashIsNull(Role role);
+
+    /** All active users with the given role — used by notification broadcasts. */
+    List<User> findByRoleAndActiveTrue(Role role);
 }

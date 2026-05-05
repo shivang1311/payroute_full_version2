@@ -89,14 +89,27 @@ const menuItems: MenuItem[] = [
     ],
   } as MenuItem,
   {
+    // Exception Queue lives here for ops staff. Reconciliation/Returns moved out
+    // into their own group so RECONCILIATION analysts (and admins) get a clean,
+    // domain-aligned home for their daily work.
     key: '/exceptions-group',
     icon: <WarningOutlined />,
     label: 'Exceptions',
     roles: ['OPERATIONS', 'ADMIN'],
     children: [
       { key: '/exceptions', icon: <WarningOutlined />, label: 'Exception Queue' },
+    ],
+  } as MenuItem,
+  {
+    // Recon-domain features. Visible to RECONCILIATION (their main workspace),
+    // OPERATIONS (overlap with returns processing), and ADMIN (full visibility).
+    key: '/reconciliation-group',
+    icon: <ReconciliationOutlined />,
+    label: 'Reconciliation',
+    roles: ['RECONCILIATION', 'OPERATIONS', 'ADMIN'],
+    children: [
+      { key: '/exceptions/reconciliation', icon: <ReconciliationOutlined />, label: 'Breaks' },
       { key: '/exceptions/returns', icon: <SwapOutlined />, label: 'Returns' },
-      { key: '/exceptions/reconciliation', icon: <ReconciliationOutlined />, label: 'Reconciliation' },
     ],
   } as MenuItem,
   {

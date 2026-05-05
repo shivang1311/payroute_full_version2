@@ -4,6 +4,7 @@ import com.payroute.payment.dto.request.PaymentInitiationRequest;
 import com.payroute.payment.dto.response.PagedResponse;
 import com.payroute.payment.dto.response.PaymentResponse;
 import com.payroute.payment.dto.response.ValidationResultResponse;
+import com.payroute.payment.entity.InitiationChannel;
 import com.payroute.payment.entity.PaymentMethod;
 import com.payroute.payment.entity.PaymentOrder;
 import com.payroute.payment.entity.PaymentStatus;
@@ -228,12 +229,29 @@ public class PaymentService {
     @Transactional(readOnly = true)
     public PagedResponse<PaymentResponse> listPayments(PaymentStatus status, String initiatedBy,
                                                         Pageable pageable) {
-        Page<PaymentOrder> page;
+        return listPayments(status, null, initiatedBy, pageable);
+    }
 
-        if (status != null) {
-            page = paymentOrderRepository.findByStatus(status, pageable);
-        } else if (initiatedBy != null && !initiatedBy.isBlank()) {
+    @Transactional(readOnly = true)
+    public PagedResponse<PaymentResponse> listPayments(PaymentStatus status, InitiationChannel channel,
+                                                        String initiatedBy, Pageable pageable) {
+        Page<PaymentOrder> page;
+        boolean hasUser = initiatedBy != null && !initiatedBy.isBlank();
+
+        if (hasUser && status != null && channel != null) {
+            page = paymentOrderRepository.findByInitiatedByAndStatusAndInitiationChannel(initiatedBy, status, channel, pageable);
+        } else if (hasUser && status != null) {
+            page = paymentOrderRepository.findByInitiatedByAndStatus(initiatedBy, status, pageable);
+        } else if (hasUser && channel != null) {
+            page = paymentOrderRepository.findByInitiatedByAndInitiationChannel(initiatedBy, channel, pageable);
+        } else if (hasUser) {
             page = paymentOrderRepository.findByInitiatedBy(initiatedBy, pageable);
+        } else if (status != null && channel != null) {
+            page = paymentOrderRepository.findByStatusAndInitiationChannel(status, channel, pageable);
+        } else if (status != null) {
+            page = paymentOrderRepository.findByStatus(status, pageable);
+        } else if (channel != null) {
+            page = paymentOrderRepository.findByInitiationChannel(channel, pageable);
         } else {
             page = paymentOrderRepository.findAll(pageable);
         }
@@ -263,6 +281,18 @@ public class PaymentService {
         return paymentOrderRepository.save(payment);
     }
 
+    /**
+     * Read-only convenience: fetch the current status of a payment.
+     * Used by the orchestrator to check for a manual HOLD/CANCEL before
+     * advancing to the next step.
+     */
+    @Transactional(readOnly = true)
+    public PaymentStatus getCurrentStatus(Long paymentId) {
+        return paymentOrderRepository.findById(paymentId)
+                .map(PaymentOrder::getStatus)
+                .orElseThrow(() -> new ResourceNotFoundException("PaymentOrder", paymentId));
+    }
+
     @Transactional(readOnly = true)
     public PaymentOrder getEntityById(Long id) {
         return paymentOrderRepository.findById(id)
@@ -280,12 +310,13 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("PaymentOrder", paymentId));
 
         PaymentStatus s = payment.getStatus();
-        if (s == PaymentStatus.COMPLETED || s == PaymentStatus.REVERSED || s == PaymentStatus.FAILED) {
+        if (s == PaymentStatus.COMPLETED || s == PaymentStatus.REVERSED
+                || s == PaymentStatus.FAILED || s == PaymentStatus.CANCELLED) {
             throw new IllegalStateException(
                     "Payment id=" + paymentId + " cannot be cancelled — current status is " + s);
         }
         log.info("Manually cancelling payment id={} (was {}). Reason: {}", paymentId, s, reason);
-        payment.setStatus(PaymentStatus.FAILED);
+        payment.setStatus(PaymentStatus.CANCELLED);
         payment.setUpdatedBy(updatedBy);
         return paymentOrderRepository.save(payment);
     }
@@ -302,7 +333,8 @@ public class PaymentService {
 
         PaymentStatus s = payment.getStatus();
         if (s == PaymentStatus.COMPLETED || s == PaymentStatus.REVERSED
-                || s == PaymentStatus.FAILED || s == PaymentStatus.HELD) {
+                || s == PaymentStatus.FAILED || s == PaymentStatus.CANCELLED
+                || s == PaymentStatus.HELD) {
             throw new IllegalStateException(
                     "Payment id=" + paymentId + " cannot be held — current status is " + s);
         }

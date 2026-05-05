@@ -8,7 +8,9 @@ import com.payroute.party.entity.AccountDirectory;
 import com.payroute.party.entity.Party;
 import com.payroute.party.exception.DuplicateResourceException;
 import com.payroute.party.exception.ResourceNotFoundException;
+import com.payroute.party.client.LedgerServiceClient;
 import com.payroute.party.client.NotificationServiceClient;
+import com.payroute.party.dto.client.LedgerPostRequest;
 import com.payroute.party.dto.client.NotificationRequest;
 import com.payroute.party.mapper.AccountMapper;
 import com.payroute.party.repository.AccountDirectoryRepository;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,6 +36,34 @@ public class AccountDirectoryService {
     private final PartyRepository partyRepository;
     private final AccountMapper accountMapper;
     private final NotificationServiceClient notificationServiceClient;
+    private final LedgerServiceClient ledgerServiceClient;
+
+    /** Seed credit applied to every newly created INR account so customers can transact. */
+    private static final BigDecimal OPENING_BALANCE_INR = new BigDecimal("1000000.00");
+
+    /**
+     * Post a CREDIT ledger entry of {@link #OPENING_BALANCE_INR} so the new account
+     * has a usable balance for transactions. Only applied to INR accounts.
+     *
+     * <p>Uses {@code paymentId = 0} as a sentinel — real payments start at id 1
+     * so this never collides. Failure is logged but does not block account creation.
+     */
+    private void seedOpeningBalance(Long accountId, String currency) {
+        if (!"INR".equalsIgnoreCase(currency)) return;
+        try {
+            ledgerServiceClient.postEntry(LedgerPostRequest.builder()
+                    .paymentId(0L) // sentinel — opening balance has no payment
+                    .accountId(accountId)
+                    .entryType("CREDIT")
+                    .amount(OPENING_BALANCE_INR)
+                    .currency("INR")
+                    .narrative("Opening balance — account onboarded")
+                    .build());
+            log.info("Seeded opening balance of INR {} for account {}", OPENING_BALANCE_INR, accountId);
+        } catch (Exception ex) {
+            log.warn("Failed to seed opening balance for account {}: {}", accountId, ex.getMessage());
+        }
+    }
 
     private void sendNotificationSafe(String userId, String title, String message,
                                        String severity, Long accountId) {
@@ -145,6 +176,9 @@ public class AccountDirectoryService {
         account.setActive(true);
         account = accountDirectoryRepository.save(account);
         log.info("Created account with id: {} for party: {}", account.getId(), party.getId());
+
+        // Seed an opening balance so customers can transact immediately on a new INR account.
+        seedOpeningBalance(account.getId(), account.getCurrency());
 
         sendNotificationSafe(actingUser,
                 "Account added",

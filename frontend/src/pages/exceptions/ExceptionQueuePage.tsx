@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Table, Card, Tag, Select, Space, Button, Modal, Input, message, Switch, Tooltip,
   Descriptions, Segmented, Row, Col, Statistic, Empty,
@@ -10,7 +10,7 @@ import {
 import { useNavigate } from 'react-router';
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
-import { exceptionApi } from '../../api/exception.api';
+import { exceptionApi, type ExceptionStats } from '../../api/exception.api';
 import { useAuthStore } from '../../stores/authStore';
 import type { ExceptionCase, ExceptionCategory, ExceptionStatus } from '../../types';
 
@@ -66,11 +66,24 @@ const ExceptionQueuePage: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
   const [myQueueOnly, setMyQueueOnly] = useState(false);
 
+  const [stats, setStats] = useState<ExceptionStats>({
+    total: 0, open: 0, inProgress: 0, escalated: 0, resolved: 0, closed: 0, slaBreached: 0,
+  });
+
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<ExceptionCase | null>(null);
   const [updateStatus, setUpdateStatus] = useState<ExceptionStatus | undefined>();
   const [resolution, setResolution] = useState('');
   const [updating, setUpdating] = useState(false);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await exceptionApi.getStats();
+      setStats(res.data.data);
+    } catch {
+      // non-fatal — cards will just show zeros
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -92,18 +105,7 @@ const ExceptionQueuePage: React.FC = () => {
     }
   }, [page, pageSize, statusFilter, categoryFilter, myQueueOnly, user?.id]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  // Local stats (counts on the current page) — gives the user a quick at-a-glance summary
-  const stats = useMemo(() => {
-    const byStatus: Record<string, number> = {};
-    const breached = data.filter(e => {
-      if (e.status === 'RESOLVED' || e.status === 'CLOSED') return false;
-      return (Date.now() - new Date(e.createdAt).getTime()) / 36e5 >= SLA_BREACH_HOURS;
-    }).length;
-    data.forEach(e => { byStatus[e.status] = (byStatus[e.status] || 0) + 1; });
-    return { total, open: byStatus.OPEN || 0, inProgress: byStatus.IN_PROGRESS || 0, breached };
-  }, [data, total]);
+  useEffect(() => { fetchData(); fetchStats(); }, [fetchData, fetchStats]);
 
   const handleUpdateStatus = async () => {
     if (!selectedRecord || !updateStatus) return;
@@ -119,6 +121,7 @@ const ExceptionQueuePage: React.FC = () => {
       setUpdateStatus(undefined);
       setResolution('');
       fetchData();
+      fetchStats();
     } catch {
       message.error('Failed to update exception');
     } finally {
@@ -132,6 +135,7 @@ const ExceptionQueuePage: React.FC = () => {
       await exceptionApi.assign(record.id, user.id);
       message.success(`Claimed exception #${record.id}`);
       fetchData();
+      fetchStats();
     } catch { message.error('Failed to claim exception'); }
   };
 
@@ -140,6 +144,7 @@ const ExceptionQueuePage: React.FC = () => {
       await exceptionApi.assign(record.id, null);
       message.success(`Released exception #${record.id}`);
       fetchData();
+      fetchStats();
     } catch { message.error('Failed to release exception'); }
   };
 
@@ -156,7 +161,6 @@ const ExceptionQueuePage: React.FC = () => {
       dataIndex: 'id',
       key: 'id',
       width: 70,
-      fixed: 'left',
       render: (id: number) => (
         <span style={{ fontFamily: 'var(--pr-mono, monospace)', fontWeight: 600, color: 'var(--pr-primary, #6366f1)' }}>
           #{id}
@@ -251,7 +255,6 @@ const ExceptionQueuePage: React.FC = () => {
       title: 'Actions',
       key: 'action',
       width: 160,
-      fixed: 'right',
       render: (_, record) => {
         const isTerminal = record.status === 'RESOLVED' || record.status === 'CLOSED';
         return (
@@ -293,30 +296,44 @@ const ExceptionQueuePage: React.FC = () => {
 
   return (
     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-      {/* Stats header */}
+      {/* Stats header — counts are global (all records, no filter applied) */}
       <Row gutter={[12, 12]}>
-        <Col xs={12} sm={6}>
+        <Col xs={12} sm={4}>
           <Card size="small">
             <Statistic title="Total" value={stats.total} />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
+        <Col xs={12} sm={4}>
           <Card size="small">
             <Statistic title="Open" value={stats.open} valueStyle={{ color: '#cf1322' }} />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
+        <Col xs={12} sm={4}>
           <Card size="small">
             <Statistic title="In Progress" value={stats.inProgress} valueStyle={{ color: '#1677ff' }} />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
+        <Col xs={12} sm={4}>
+          <Card size="small">
+            <Statistic
+              title="Escalated"
+              value={stats.escalated}
+              valueStyle={{ color: stats.escalated > 0 ? '#d46b08' : undefined }}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} sm={4}>
           <Card size="small">
             <Statistic
               title="SLA Breached"
-              value={stats.breached}
-              valueStyle={{ color: stats.breached > 0 ? '#cf1322' : undefined }}
+              value={stats.slaBreached}
+              valueStyle={{ color: stats.slaBreached > 0 ? '#cf1322' : undefined }}
             />
+          </Card>
+        </Col>
+        <Col xs={12} sm={4}>
+          <Card size="small">
+            <Statistic title="Resolved" value={stats.resolved} valueStyle={{ color: '#389e0d' }} />
           </Card>
         </Col>
       </Row>
@@ -327,7 +344,7 @@ const ExceptionQueuePage: React.FC = () => {
           <Space>
             <span style={{ color: 'var(--pr-text-muted, rgba(255,255,255,0.65))', fontSize: 13 }}>My Queue</span>
             <Switch checked={myQueueOnly} onChange={(v) => { setMyQueueOnly(v); setPage(0); }} size="small" />
-            <Button icon={<ReloadOutlined />} onClick={fetchData}>Refresh</Button>
+            <Button icon={<ReloadOutlined />} onClick={() => { fetchData(); fetchStats(); }}>Refresh</Button>
           </Space>
         }
       >
@@ -342,6 +359,7 @@ const ExceptionQueuePage: React.FC = () => {
               { label: 'All', value: 'ALL' },
               { label: 'Open', value: 'OPEN' },
               { label: 'In Progress', value: 'IN_PROGRESS' },
+              { label: 'Escalated', value: 'ESCALATED' },
               { label: 'Resolved', value: 'RESOLVED' },
               { label: 'Closed', value: 'CLOSED' },
             ]}

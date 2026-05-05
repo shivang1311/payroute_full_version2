@@ -2,7 +2,7 @@ package com.payroute.compliance.service;
 
 import com.payroute.compliance.client.NotificationServiceClient;
 import com.payroute.compliance.client.PaymentServiceClient;
-import com.payroute.compliance.dto.client.NotificationRequest;
+import com.payroute.compliance.dto.client.BroadcastNotificationRequest;
 import com.payroute.compliance.dto.client.PaymentStatusUpdate;
 import com.payroute.compliance.dto.request.ComplianceScreenRequest;
 import com.payroute.compliance.dto.response.ComplianceCheckResponse;
@@ -103,18 +103,21 @@ public class ComplianceService {
                         request.getPaymentId(), e.getMessage());
             }
 
+            // Fan out to every active COMPLIANCE analyst so a fresh hold lands in their
+            // bell + dashboard the moment screening flags it.
             try {
-                notificationServiceClient.sendNotification(NotificationRequest.builder()
-                        .userId(0L)
-                        .title("Compliance Hold Placed")
-                        .message("Payment " + request.getPaymentId() + " has been placed on compliance hold")
+                notificationServiceClient.broadcast(BroadcastNotificationRequest.builder()
+                        .role("COMPLIANCE")
+                        .title("New Compliance Hold")
+                        .message("Payment #" + request.getPaymentId()
+                                + " has been placed on hold for review (amount exceeds threshold).")
                         .category("COMPLIANCE")
                         .severity("WARNING")
                         .referenceType("PAYMENT")
                         .referenceId(request.getPaymentId())
                         .build());
             } catch (Exception e) {
-                log.error("Failed to send compliance hold notification: {}", e.getMessage());
+                log.error("Failed to broadcast compliance hold notification: {}", e.getMessage());
             }
         }
 

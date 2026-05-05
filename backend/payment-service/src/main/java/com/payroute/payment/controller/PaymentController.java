@@ -6,6 +6,7 @@ import com.payroute.payment.dto.response.ApiResponse;
 import com.payroute.payment.dto.response.PagedResponse;
 import com.payroute.payment.dto.response.PaymentResponse;
 import com.payroute.payment.dto.response.PaymentStatsResponse;
+import com.payroute.payment.entity.InitiationChannel;
 import com.payroute.payment.entity.PaymentOrder;
 import com.payroute.payment.entity.PaymentStatus;
 import com.payroute.payment.mapper.PaymentMapper;
@@ -124,6 +125,7 @@ public class PaymentController {
     @Operation(summary = "List payments", description = "Paginated list of payments with optional filters")
     public ResponseEntity<ApiResponse<PagedResponse<PaymentResponse>>> listPayments(
             @RequestParam(required = false) PaymentStatus status,
+            @RequestParam(required = false) InitiationChannel channel,
             @RequestParam(required = false) String initiatedBy,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -145,7 +147,7 @@ public class PaymentController {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         PagedResponse<PaymentResponse> pagedResponse =
-                paymentService.listPayments(status, initiatedBy, pageable);
+                paymentService.listPayments(status, channel, initiatedBy, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }

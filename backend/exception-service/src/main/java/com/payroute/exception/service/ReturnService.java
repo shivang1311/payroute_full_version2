@@ -2,6 +2,7 @@ package com.payroute.exception.service;
 
 import com.payroute.exception.client.LedgerServiceClient;
 import com.payroute.exception.client.NotificationServiceClient;
+import com.payroute.exception.dto.client.BroadcastNotificationRequest;
 import com.payroute.exception.dto.client.LedgerPostRequest;
 import com.payroute.exception.dto.client.NotificationRequest;
 import com.payroute.exception.dto.request.ReturnRequest;
@@ -40,6 +41,24 @@ public class ReturnService {
         returnItem.setReturnDate(LocalDate.now());
         returnItem = returnItemRepository.save(returnItem);
         log.info("Created return item {} for payment {}", returnItem.getId(), request.getPaymentId());
+
+        // Fan out to every RECONCILIATION analyst — they need to post the reversal
+        // before the cycle closes.
+        try {
+            notificationServiceClient.broadcast(BroadcastNotificationRequest.builder()
+                    .role("RECONCILIATION")
+                    .title("New Return Received")
+                    .message("Return for payment #" + request.getPaymentId()
+                            + " (" + request.getReasonCode() + ") needs to be processed.")
+                    .category("EXCEPTION")
+                    .severity("WARNING")
+                    .referenceType("RETURN")
+                    .referenceId(returnItem.getId())
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to broadcast new-return notification: {}", e.getMessage());
+        }
+
         return returnItemMapper.toResponse(returnItem);
     }
 

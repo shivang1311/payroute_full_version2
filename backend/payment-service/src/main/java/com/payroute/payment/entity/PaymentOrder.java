@@ -60,7 +60,7 @@ public class PaymentOrder {
     private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "VARCHAR(30)")
     private PaymentStatus status;
 
     @Column(name = "initiated_by")

@@ -1,5 +1,6 @@
 package com.payroute.notification.controller;
 
+import com.payroute.notification.dto.request.BroadcastRequest;
 import com.payroute.notification.dto.request.NotificationRequest;
 import com.payroute.notification.dto.response.ApiResponse;
 import com.payroute.notification.dto.response.NotificationCountResponse;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -36,6 +39,23 @@ public class NotificationController {
         NotificationResponse response = notificationService.send(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Notification sent successfully"));
+    }
+
+    @Operation(
+            summary = "Broadcast a notification to all users with a given role",
+            description = "Fan-out: creates one notification per active user with the requested role. "
+                    + "Used by other services for events that should alert every analyst of a kind "
+                    + "(e.g. a new compliance hold → all COMPLIANCE users).")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Notifications broadcast"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+    })
+    @PostMapping("/broadcast")
+    public ResponseEntity<ApiResponse<List<NotificationResponse>>> broadcast(@Valid @RequestBody BroadcastRequest request) {
+        List<NotificationResponse> created = notificationService.broadcast(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(created,
+                        "Broadcast sent to " + created.size() + " " + request.getRole() + " user(s)"));
     }
 
     @Operation(summary = "Get user notifications", description = "Retrieve paginated notifications for the authenticated user")

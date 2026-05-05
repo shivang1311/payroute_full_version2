@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -154,6 +155,19 @@ public class UserController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
         PagedResponse<UserResponse> response = userService.getAllUsers(pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @Operation(
+            summary = "List active users by role (service-to-service)",
+            description = "Used by notification-service to fan out broadcasts to e.g. all COMPLIANCE analysts.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Users returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid role")
+    })
+    @GetMapping("/by-role")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getUsersByRole(
+            @Parameter(description = "Role name (e.g. COMPLIANCE, OPERATIONS)") @RequestParam("role") Role role) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getUsersByRole(role)));
     }
 
     @Operation(summary = "Get user by ID", description = "Retrieve a single user by their ID")

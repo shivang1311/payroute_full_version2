@@ -3,7 +3,9 @@ package com.payroute.exception.controller;
 import com.payroute.exception.dto.request.ExceptionCaseRequest;
 import com.payroute.exception.dto.response.ApiResponse;
 import com.payroute.exception.dto.response.ExceptionCaseResponse;
+import com.payroute.exception.dto.response.ExceptionStatsResponse;
 import com.payroute.exception.dto.response.PagedResponse;
+import com.payroute.exception.entity.ExceptionCategory;
 import com.payroute.exception.entity.ExceptionStatus;
 import com.payroute.exception.service.ExceptionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,6 +42,14 @@ public class ExceptionController {
                 .body(ApiResponse.success(response, "Exception case created successfully"));
     }
 
+    @Operation(summary = "Exception queue stats",
+            description = "Global aggregate counts by status + SLA-breached count. " +
+                    "Always unfiltered — used to power the dashboard header cards.")
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<ExceptionStatsResponse>> getStats() {
+        return ResponseEntity.ok(ApiResponse.success(exceptionService.getStats()));
+    }
+
     @Operation(summary = "List exception cases", description = "Retrieve paginated list of exception cases with optional filters")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Exception cases retrieved")
@@ -47,6 +57,7 @@ public class ExceptionController {
     @GetMapping
     public ResponseEntity<ApiResponse<PagedResponse<ExceptionCaseResponse>>> getExceptions(
             @Parameter(description = "Filter by status") @RequestParam(required = false) ExceptionStatus status,
+            @Parameter(description = "Filter by category") @RequestParam(required = false) ExceptionCategory category,
             @Parameter(description = "Filter by owner ID — used by 'My Queue'") @RequestParam(required = false) Long ownerId,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
@@ -55,7 +66,7 @@ public class ExceptionController {
 
         Sort.Direction sortDirection = Sort.Direction.fromString(direction);
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
-        PagedResponse<ExceptionCaseResponse> response = exceptionService.getExceptions(status, ownerId, pageable);
+        PagedResponse<ExceptionCaseResponse> response = exceptionService.getExceptions(status, category, ownerId, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

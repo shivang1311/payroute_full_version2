@@ -19,6 +19,7 @@ const statusColorMap: Record<PaymentStatus, string> = {
   PROCESSING: 'processing',
   COMPLETED: 'green',
   FAILED: 'red',
+  CANCELLED: 'volcano',
   REVERSED: 'purple',
 };
 
@@ -114,7 +115,7 @@ const PaymentListPage: React.FC = () => {
 
   const statusOptions: PaymentStatus[] = [
     'INITIATED', 'VALIDATED', 'VALIDATION_FAILED', 'SCREENING',
-    'HELD', 'ROUTED', 'PROCESSING', 'COMPLETED', 'FAILED', 'REVERSED',
+    'HELD', 'ROUTED', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REVERSED',
   ];
 
   const channelOptions: InitiationChannel[] = ['BRANCH', 'MOBILE', 'ONLINE', 'API'];

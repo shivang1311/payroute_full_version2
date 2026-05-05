@@ -23,6 +23,7 @@ import {
 } from '@ant-design/icons';
 import { useAuthStore } from '../../stores/authStore';
 import PageHeader from '../../components/common/PageHeader';
+import { EMAIL_PATTERN, EMAIL_VALIDATION_MESSAGE } from '../../utils/emailValidation';
 import dayjs from 'dayjs';
 
 const roleColorMap: Record<string, string> = {
@@ -190,6 +191,7 @@ export default function ProfilePage() {
                 rules={[
                   { required: true, message: 'Email is required' },
                   { type: 'email', message: 'Invalid email address' },
+                  { pattern: EMAIL_PATTERN, message: EMAIL_VALIDATION_MESSAGE },
                 ]}
               >
                 <Input prefix={<MailOutlined />} placeholder="you@company.com" autoComplete="email" />

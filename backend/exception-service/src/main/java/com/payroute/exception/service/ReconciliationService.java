@@ -1,7 +1,9 @@
 package com.payroute.exception.service;
 
 import com.payroute.exception.client.LedgerServiceClient;
+import com.payroute.exception.client.NotificationServiceClient;
 import com.payroute.exception.client.RoutingServiceClient;
+import com.payroute.exception.dto.client.BroadcastNotificationRequest;
 import com.payroute.exception.dto.response.PagedResponse;
 import com.payroute.exception.dto.response.ReconciliationResponse;
 import com.payroute.exception.entity.ReconResult;
@@ -37,6 +39,7 @@ public class ReconciliationService {
     private final ReconciliationRecordMapper reconciliationRecordMapper;
     private final RoutingServiceClient routingServiceClient;
     private final LedgerServiceClient ledgerServiceClient;
+    private final NotificationServiceClient notificationServiceClient;
 
     public PagedResponse<ReconciliationResponse> getReconciliationRecords(LocalDate reconDate,
                                                                           ReconResult result,
@@ -115,6 +118,26 @@ public class ReconciliationService {
         List<ReconciliationRecord> saved = reconciliationRecordRepository.saveAll(records);
         log.info("Reconciliation for {} complete: matched={}, railOnly={}, ledgerOnly={}, totalRecords={}",
                 date, matched.size(), railOnly.size(), ledgerOnly.size(), saved.size());
+
+        // Notify every RECONCILIATION analyst when fresh breaks land — same fan-out
+        // pattern compliance uses for new holds. Skipped on a clean run.
+        int newBreaks = railOnly.size() + ledgerOnly.size();
+        if (newBreaks > 0) {
+            try {
+                notificationServiceClient.broadcast(BroadcastNotificationRequest.builder()
+                        .role("RECONCILIATION")
+                        .title("New Recon Breaks")
+                        .message(newBreaks + " new break(s) detected during reconciliation for " + date
+                                + " (" + railOnly.size() + " rail-only, " + ledgerOnly.size() + " ledger-only).")
+                        .category("EXCEPTION")
+                        .severity("WARNING")
+                        .referenceType("RECON_RUN")
+                        .referenceId((long) date.toEpochDay())
+                        .build());
+            } catch (Exception e) {
+                log.error("Failed to broadcast new-break notification: {}", e.getMessage());
+            }
+        }
 
         return reconciliationRecordMapper.toResponseList(saved);
     }

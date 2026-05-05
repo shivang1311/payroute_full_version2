@@ -4,6 +4,7 @@ import { Form, Input, Button, Typography, Alert } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../../stores/authStore';
 import Logo from '../../components/common/Logo';
+import { EMAIL_PATTERN, EMAIL_VALIDATION_MESSAGE } from '../../utils/emailValidation';
 
 const { Title, Text } = Typography;
 
@@ -153,7 +154,8 @@ export default function RegisterPage() {
               name="email"
               rules={[
                 { required: true, message: 'Email is required' },
-                { type: 'email', message: 'Invalid email' },
+                { type: 'email', message: 'Invalid email format' },
+                { pattern: EMAIL_PATTERN, message: EMAIL_VALIDATION_MESSAGE },
               ]}
             >
               <Input

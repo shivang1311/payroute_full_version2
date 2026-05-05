@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
 import { userApi } from '../../api/auth.api';
 import type { User, Role } from '../../types';
+import { EMAIL_PATTERN, EMAIL_VALIDATION_MESSAGE } from '../../utils/emailValidation';
 
 const roleColorMap: Record<Role, string> = {
   ADMIN: 'red',
@@ -237,6 +238,7 @@ const UserManagementPage: React.FC = () => {
             rules={[
               { required: true, message: 'Email is required' },
               { type: 'email', message: 'Invalid email' },
+              { pattern: EMAIL_PATTERN, message: EMAIL_VALIDATION_MESSAGE },
             ]}
           >
             <Input placeholder="user@company.com" autoComplete="off" />

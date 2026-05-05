@@ -84,6 +84,17 @@ public class PaymentOrchestrator {
             }
 
             // Step 4: Route payment
+            // Guard: re-read current status before routing. If Ops manually HELD or
+            // cancelled (FAILED) the payment while compliance was running, abort here
+            // so we don't overwrite that manual action.
+            PaymentStatus currentStatus = paymentService.getCurrentStatus(payment.getId());
+            if (currentStatus == PaymentStatus.HELD
+                    || currentStatus == PaymentStatus.CANCELLED
+                    || currentStatus == PaymentStatus.FAILED) {
+                log.info("Payment id={} is now {} (manual Ops action) — aborting background orchestration",
+                        payment.getId(), currentStatus);
+                return;
+            }
             paymentService.updateStatus(payment.getId(), PaymentStatus.ROUTED, "SYSTEM");
             RouteRequest routeRequest = RouteRequest.builder()
                     .paymentId(payment.getId())

@@ -31,6 +31,7 @@ const statusColorMap: Record<PaymentStatus, string> = {
   PROCESSING: 'processing',
   COMPLETED: 'green',
   FAILED: 'red',
+  CANCELLED: 'volcano',
   REVERSED: 'purple',
 };
 
@@ -196,7 +197,7 @@ const PaymentDetailPage: React.FC = () => {
         }
         extra={
           <Space wrap>
-            {canRetry && (payment.status === 'FAILED' || payment.status === 'VALIDATION_FAILED') && (
+            {canRetry && (payment.status === 'FAILED' || payment.status === 'VALIDATION_FAILED') && payment.status !== 'CANCELLED' && (
               <Button
                 type="primary"
                 icon={<RedoOutlined />}
@@ -206,7 +207,7 @@ const PaymentDetailPage: React.FC = () => {
                 Retry Payment
               </Button>
             )}
-            {canActOnPayment && !['COMPLETED', 'FAILED', 'REVERSED', 'HELD'].includes(payment.status) && (
+            {canActOnPayment && !['COMPLETED', 'FAILED', 'CANCELLED', 'REVERSED', 'HELD'].includes(payment.status) && (
               <Button
                 icon={<PauseCircleOutlined />}
                 onClick={() => { setActionModal('hold'); setActionReason(''); }}
@@ -214,7 +215,7 @@ const PaymentDetailPage: React.FC = () => {
                 Hold
               </Button>
             )}
-            {canActOnPayment && !['COMPLETED', 'FAILED', 'REVERSED'].includes(payment.status) && (
+            {canActOnPayment && !['COMPLETED', 'FAILED', 'CANCELLED', 'REVERSED'].includes(payment.status) && (
               <Button
                 danger
                 icon={<StopOutlined />}

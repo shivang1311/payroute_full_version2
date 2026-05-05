@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -75,6 +76,13 @@ public class UserService {
     public PagedResponse<UserResponse> getAllUsers(Pageable pageable) {
         Page<User> page = userRepository.findAll(pageable);
         return userMapper.toPagedResponse(page);
+    }
+
+    /** Active users for a given role — used by notification broadcast fan-out. */
+    public List<UserResponse> getUsersByRole(Role role) {
+        return userRepository.findByRoleAndActiveTrue(role).stream()
+                .map(userMapper::toResponse)
+                .toList();
     }
 
     public UserResponse getUserById(Long id) {

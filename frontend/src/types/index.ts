@@ -114,7 +114,7 @@ export interface AccountValidationResponse {
 export type PaymentStatus =
   | 'INITIATED' | 'VALIDATED' | 'VALIDATION_FAILED'
   | 'SCREENING' | 'HELD' | 'ROUTED'
-  | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REVERSED';
+  | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'REVERSED';
 
 export type InitiationChannel = 'BRANCH' | 'MOBILE' | 'ONLINE' | 'API';
 

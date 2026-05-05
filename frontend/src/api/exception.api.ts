@@ -1,7 +1,20 @@
 import apiClient from './client';
 import type { ApiResponse, PagedResponse, ExceptionCase, ReturnItem, ReconciliationRecord } from '../types';
 
+export interface ExceptionStats {
+  total: number;
+  open: number;
+  inProgress: number;
+  escalated: number;
+  resolved: number;
+  closed: number;
+  slaBreached: number;
+}
+
 export const exceptionApi = {
+  getStats: () =>
+    apiClient.get<ApiResponse<ExceptionStats>>('/exceptions/stats'),
+
   getAll: (params: { status?: string; category?: string; ownerId?: number; page?: number; size?: number } = {}) =>
     apiClient.get<ApiResponse<PagedResponse<ExceptionCase>>>('/exceptions', { params }),
 

@@ -10,7 +10,10 @@ import { paymentRef } from '../../utils/paymentRef';
 import type { PaymentInitiationRequest, InitiationChannel, Account } from '../../types';
 
 const currencyOptions = ['INR', 'USD', 'EUR', 'GBP'];
-const channelOptions: InitiationChannel[] = ['BRANCH', 'MOBILE', 'ONLINE', 'API'];
+// BRANCH and API are staff-side rails — customers never use them in self-service.
+// They only see MOBILE and ONLINE; staff (OPS/ADMIN) see all four.
+const staffChannelOptions: InitiationChannel[] = ['BRANCH', 'MOBILE', 'ONLINE', 'API'];
+const customerChannelOptions: InitiationChannel[] = ['MOBILE', 'ONLINE'];
 
 /**
  * RBI / SWIFT-style purpose codes. Each transaction must be tagged with one
@@ -405,7 +408,8 @@ const CreatePaymentPage: React.FC = () => {
 
         <Form.Item label="Initiation Channel" name="initiationChannel">
           <Select
-            options={channelOptions.map((c) => ({ label: c, value: c }))}
+            options={(isCustomer ? customerChannelOptions : staffChannelOptions)
+              .map((c) => ({ label: c, value: c }))}
             placeholder="Select channel"
           />
         </Form.Item>

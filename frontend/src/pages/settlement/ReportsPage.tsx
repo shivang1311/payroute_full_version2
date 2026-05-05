@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Card, Tag, Space, Button, Modal, Input, Select, message, Descriptions, Empty } from 'antd';
-import { ReloadOutlined, FileAddOutlined } from '@ant-design/icons';
+import { ReloadOutlined, FileAddOutlined, FilePdfOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
 import { reportApi } from '../../api/settlement.api';
+import { downloadReportPdf } from '../../utils/reportPdf';
 import type { PaymentReport, ReportScope } from '../../types';
 
 const statusColorMap: Record<string, string> = {
@@ -216,6 +217,30 @@ const ReportsPage: React.FC = () => {
       dataIndex: 'generatedAt',
       key: 'generatedAt',
       render: (val?: string) => (val ? dayjs(val).format('YYYY-MM-DD HH:mm') : '-'),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 140,
+      render: (_, record) => (
+        <Button
+          size="small"
+          type="link"
+          icon={<FilePdfOutlined />}
+          disabled={record.status !== 'COMPLETED'}
+          onClick={(e) => {
+            e.stopPropagation();
+            try {
+              downloadReportPdf(record);
+            } catch (err) {
+              const e = err as { message?: string };
+              message.error(e?.message || 'Failed to generate PDF');
+            }
+          }}
+        >
+          PDF
+        </Button>
+      ),
     },
   ];
 

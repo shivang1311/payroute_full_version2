@@ -1,5 +1,6 @@
 package com.payroute.payment.repository;
 
+import com.payroute.payment.entity.InitiationChannel;
 import com.payroute.payment.entity.PaymentOrder;
 import com.payroute.payment.entity.PaymentStatus;
 import org.springframework.data.domain.Page;
@@ -19,7 +20,17 @@ public interface PaymentOrderRepository extends JpaRepository<PaymentOrder, Long
 
     Page<PaymentOrder> findByStatus(PaymentStatus status, Pageable pageable);
 
+    Page<PaymentOrder> findByInitiationChannel(InitiationChannel channel, Pageable pageable);
+
+    Page<PaymentOrder> findByStatusAndInitiationChannel(PaymentStatus status, InitiationChannel channel, Pageable pageable);
+
     Page<PaymentOrder> findByInitiatedBy(String initiatedBy, Pageable pageable);
+
+    Page<PaymentOrder> findByInitiatedByAndStatus(String initiatedBy, PaymentStatus status, Pageable pageable);
+
+    Page<PaymentOrder> findByInitiatedByAndInitiationChannel(String initiatedBy, InitiationChannel channel, Pageable pageable);
+
+    Page<PaymentOrder> findByInitiatedByAndStatusAndInitiationChannel(String initiatedBy, PaymentStatus status, InitiationChannel channel, Pageable pageable);
 
     List<PaymentOrder> findByDebtorAccountIdAndAmountAndCurrencyAndCreatedAtAfter(
             Long debtorAccountId, BigDecimal amount, String currency, LocalDateTime after);
@@ -43,6 +54,7 @@ public interface PaymentOrderRepository extends JpaRepository<PaymentOrder, Long
             "AND p.createdAt BETWEEN :from AND :to " +
             "AND p.status NOT IN (com.payroute.payment.entity.PaymentStatus.FAILED, " +
             "                     com.payroute.payment.entity.PaymentStatus.VALIDATION_FAILED, " +
+            "                     com.payroute.payment.entity.PaymentStatus.CANCELLED, " +
             "                     com.payroute.payment.entity.PaymentStatus.REVERSED)")
     BigDecimal sumByDebtorAndMethodInWindow(
             @Param("debtorAccountId") Long debtorAccountId,

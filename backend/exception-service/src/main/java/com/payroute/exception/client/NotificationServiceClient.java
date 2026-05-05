@@ -1,6 +1,7 @@
 package com.payroute.exception.client;
 
 import com.payroute.exception.config.FeignConfig;
+import com.payroute.exception.dto.client.BroadcastNotificationRequest;
 import com.payroute.exception.dto.client.NotificationRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -14,4 +15,8 @@ public interface NotificationServiceClient {
 
     @PostMapping("/api/v1/notifications")
     ResponseEntity<Map<String, Object>> sendNotification(@RequestBody NotificationRequest request);
+
+    /** Fan-out to every active user with the given role (e.g. RECONCILIATION). */
+    @PostMapping("/api/v1/notifications/broadcast")
+    ResponseEntity<Map<String, Object>> broadcast(@RequestBody BroadcastNotificationRequest request);
 }
