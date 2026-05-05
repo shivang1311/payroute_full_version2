@@ -42,6 +42,18 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <springdoc.version>2.6.0</springdoc.version>
         <resilience4j.version>2.2.0</resilience4j.version>
+        <!-- SonarQube -->
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <sonar.projectKey>payroute-hub-backend</sonar.projectKey>
+        <sonar.projectName>PayRoute Hub — Backend</sonar.projectName>
+        <sonar.java.source>17</sonar.java.source>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            ${project.build.directory}/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+        <!-- Mirror JaCoCo excludes so SonarQube matches local coverage % -->
+        <sonar.coverage.exclusions>
+            **/client/**,**/mapper/**,**/*Application.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencyManagement>
@@ -91,6 +103,54 @@
     <build>
         <pluginManagement>
             <plugins>
+                <!-- SonarQube scanner -->
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>4.0.0.4121</version>
+                </plugin>
+                <!-- JaCoCo for code coverage -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.12</version>
+                    <configuration>
+                        <!-- Only exclude items that are uncoverable by design:
+                             - the @SpringBootApplication main() bootstrap class
+                             - Feign client interfaces (Spring generates the
+                               implementation at runtime via ByteBuddy proxies,
+                               so there is no bytecode in target/classes for
+                               JaCoCo to instrument).
+                             Everything else (entity, dto, mapper, exception,
+                             config) is left visible — those classes ARE
+                             exercised through the service/controller tests
+                             and should appear in the report. -->
+                        <excludes>
+                            <!-- Feign client interfaces: implementation is a
+                                 ByteBuddy proxy generated at runtime, so there
+                                 is no bytecode in target/classes to instrument. -->
+                            <exclude>**/client/**</exclude>
+                            <!-- @SpringBootApplication bootstrap class: just main(). -->
+                            <exclude>**/*Application.class</exclude>
+                            <!-- MapStruct *MapperImpl: 100% auto-generated. The
+                                 generator emits many helper methods that the
+                                 application never calls — including them
+                                 understates coverage on real code. -->
+                            <exclude>**/mapper/**</exclude>
+                        </excludes>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals><goal>prepare-agent</goal></goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>verify</phase>
+                            <goals><goal>report</goal></goals>
+                        </execution>
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
