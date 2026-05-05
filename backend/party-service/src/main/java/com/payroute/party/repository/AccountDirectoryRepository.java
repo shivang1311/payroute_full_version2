@@ -11,6 +11,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repository over {@link AccountDirectory}. Soft-delete-aware (filters on
+ * {@code deletedAt IS NULL}). Provides lookups by account-number/IFSC pair,
+ * partyId, and pageable filters used by the Account Directory UI.
+ */
 @Repository
 public interface AccountDirectoryRepository extends JpaRepository<AccountDirectory, Long> {
 

@@ -6,6 +6,11 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
+/**
+ * Party Service — owns customers/corporates ({@code Party}) and the
+ * {@code AccountDirectory} (the customer's bank accounts plus saved
+ * beneficiaries). Spring Boot entrypoint.
+ */
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients

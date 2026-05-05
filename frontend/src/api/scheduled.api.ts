@@ -1,3 +1,7 @@
+/**
+ * Scheduled (future-dated and recurring) payments. The scheduler in
+ * payment-service materializes a real PaymentOrder when each next-run hits.
+ */
 import apiClient from './client';
 import type { ApiResponse, PagedResponse } from '../types';
 import type { ScheduledPayment, ScheduledPaymentRequest } from '../types/scheduled';

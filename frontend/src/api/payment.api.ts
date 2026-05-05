@@ -1,3 +1,7 @@
+/**
+ * Payment endpoints — initiate, fetch, search, cancel, status updates.
+ * Backed by payment-service.
+ */
 import apiClient from './client';
 import type { ApiResponse, PagedResponse, PaymentOrder, PaymentInitiationRequest } from '../types';
 

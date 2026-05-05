@@ -12,6 +12,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Repository over {@link Party}. Soft-delete-aware: queries filter
+ * {@code deletedAt IS NULL} so deleted parties are invisible to the API
+ * without a hard DELETE.
+ */
 @Repository
 public interface PartyRepository extends JpaRepository<Party, Long> {
 

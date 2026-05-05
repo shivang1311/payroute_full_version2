@@ -12,6 +12,11 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Maps service-layer exceptions to HTTP responses with a uniform
+ * {@link ApiResponse} envelope. ResourceNotFound → 404,
+ * DuplicateResource → 409, validation failures → 400, anything else → 500.
+ */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {

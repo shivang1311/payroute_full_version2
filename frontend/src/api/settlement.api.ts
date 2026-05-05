@@ -1,3 +1,7 @@
+/**
+ * Settlement batches and downloadable payment reports.
+ * Backed by settlement-service.
+ */
 import apiClient from './client';
 import type { ApiResponse, PagedResponse, SettlementBatch, PaymentReport } from '../types';
 

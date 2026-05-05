@@ -1,3 +1,7 @@
+/**
+ * In-app notifications — list, mark read, unread badge count, and broadcast
+ * helpers used by other services for fan-out. Backed by notification-service.
+ */
 import apiClient from './client';
 import type { ApiResponse, PagedResponse, Notification } from '../types';
 

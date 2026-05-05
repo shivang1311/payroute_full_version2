@@ -1,9 +1,19 @@
+/**
+ * Global auth store (Zustand). Single source of truth for the current user,
+ * access token, and login/logout/profile mutations. Hydrates synchronously
+ * from `localStorage` on module load so the app boots already-signed-in if
+ * credentials exist. Wraps every mutation in toast feedback via antd's
+ * `message` so callers don't need to handle UI on success/failure.
+ */
 import { create } from 'zustand';
 import type { User, Role } from '../types';
 import { authApi, userApi } from '../api/auth.api';
 import { message } from 'antd';
 
-interface AuthState {
+/**
+ * State + actions exposed by {@link useAuthStore}.
+ */
+export interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
@@ -37,6 +47,11 @@ if (storedToken && storedUserStr) {
   }
 }
 
+/**
+ * The auth store hook. Use selectors to read only what you need:
+ * `const user = useAuthStore(s => s.user)`. Calling without a selector
+ * subscribes to the whole store and re-renders on any change.
+ */
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: initialUser,
   token: initialToken,

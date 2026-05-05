@@ -18,6 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+/**
+ * CRUD and lifecycle for {@link com.payroute.party.entity.Party}. Enforces
+ * uniqueness on email/PAN, status transitions (ACTIVE/SUSPENDED), and paged
+ * search over name/email/type.
+ */
 @Slf4j
 @Service
 @Transactional(readOnly = true)

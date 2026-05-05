@@ -1,3 +1,7 @@
+/**
+ * Compliance endpoints — KYC/AML screening results, holds (release/reject),
+ * and compliance dashboard stats. Backed by compliance-service.
+ */
 import apiClient from './client';
 import type { ApiResponse, PagedResponse, ComplianceCheck, Hold } from '../types';
 

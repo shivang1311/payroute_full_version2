@@ -1,7 +1,17 @@
+/**
+ * Shared TypeScript types for the PayRoute Hub frontend. These mirror the
+ * backend DTO contracts (Spring Boot @JsonProperty shapes) and are imported
+ * by the api/, stores/, and component layers.
+ */
+
 // ============================================
 // Common Types
 // ============================================
 
+/**
+ * Standard envelope every backend endpoint returns.
+ * @typeParam T - The shape of the `data` field for this specific endpoint.
+ */
 export interface ApiResponse<T> {
   success: boolean;
   data: T;

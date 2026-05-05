@@ -12,6 +12,11 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.util.stream.Collectors;
 
+/**
+ * Maps service-layer exceptions to HTTP responses with a uniform
+ * {@link ApiResponse} envelope. ForbiddenException → 403, ResourceNotFound → 404,
+ * IllegalState → 409, validation failures → 400, anything else → 500.
+ */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {

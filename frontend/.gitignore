@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Generated docs (run `npm run docs` to regenerate)
+docs
+# Coverage output
+coverage
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

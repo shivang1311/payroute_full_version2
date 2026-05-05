@@ -1,5 +1,11 @@
+/**
+ * Light/dark theme switcher. Reads the user's last choice from localStorage,
+ * falling back to the OS preference (`prefers-color-scheme`). Writes to the
+ * `<html data-theme="...">` attribute so global CSS can react.
+ */
 import { create } from 'zustand';
 
+/** UI theme options. */
 export type ThemeMode = 'light' | 'dark';
 
 const STORAGE_KEY = 'pr-theme-mode';
@@ -23,12 +29,17 @@ const applyToDom = (mode: ThemeMode) => {
   document.documentElement.style.colorScheme = mode;
 };
 
-interface ThemeStore {
+/** State + actions exposed by {@link useThemeStore}. */
+export interface ThemeStore {
+  /** Current theme. */
   mode: ThemeMode;
+  /** Flip light↔dark and persist. */
   toggle: () => void;
+  /** Set an explicit mode and persist. */
   setMode: (m: ThemeMode) => void;
 }
 
+/** Hook returning the active theme and the controls to change it. */
 export const useThemeStore = create<ThemeStore>((set, get) => {
   const initial = readInitial();
   applyToDom(initial);

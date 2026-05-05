@@ -11,6 +11,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repository over {@link FeeSchedule}. The headline lookup
+ * {@code findActiveSchedule} returns the row that is active on a given date
+ * for a given (product, rail) pair — used by
+ * {@link com.payroute.ledger.service.FeeService} on every payment posting.
+ */
 @Repository
 public interface FeeScheduleRepository extends JpaRepository<FeeSchedule, Long> {
 

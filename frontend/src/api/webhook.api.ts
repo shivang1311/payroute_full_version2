@@ -1,3 +1,7 @@
+/**
+ * Webhook subscriptions and delivery audit trail. Outbound webhooks are
+ * fired by notification-service when configured events occur.
+ */
 import apiClient from './client';
 import type { ApiResponse, PagedResponse } from '../types';
 import type {

@@ -1,3 +1,7 @@
+/**
+ * Ledger endpoints — entries (paged + by-payment + reverse), payment-level
+ * postings, account summary, and fee-schedule CRUD. Backed by ledger-service.
+ */
 import apiClient from './client';
 import type { ApiResponse, PagedResponse, LedgerEntry, FeeSchedule, AccountSummary } from '../types';
 

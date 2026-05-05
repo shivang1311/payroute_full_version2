@@ -109,6 +109,24 @@
                     <artifactId>sonar-maven-plugin</artifactId>
                     <version>4.0.0.4121</version>
                 </plugin>
+                <!-- Javadoc HTML generator. Run with: mvn javadoc:javadoc
+                     Output goes to target/site/apidocs/index.html -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.11.2</version>
+                    <configuration>
+                        <doclint>none</doclint>
+                        <quiet>true</quiet>
+                        <show>protected</show>
+                        <source>${java.version}</source>
+                        <!-- Skip auto-generated MapStruct impls and Feign client
+                             interfaces — same rationale as the JaCoCo excludes. -->
+                        <excludePackageNames>
+                            com.payroute.*.mapper:com.payroute.*.client
+                        </excludePackageNames>
+                    </configuration>
+                </plugin>
                 <!-- JaCoCo for code coverage -->
                 <plugin>
                     <groupId>org.jacoco</groupId>

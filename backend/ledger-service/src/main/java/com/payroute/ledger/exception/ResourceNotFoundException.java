@@ -3,6 +3,10 @@ package com.payroute.ledger.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+/**
+ * Thrown when a lookup by ID fails. Mapped to HTTP 404 by
+ * {@link GlobalExceptionHandler}.
+ */
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class ResourceNotFoundException extends RuntimeException {
 

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "PayRoute Hub — Frontend API",
+  "out": "docs",
+  "entryPoints": [
+    "src/api",
+    "src/utils",
+    "src/stores",
+    "src/types"
+  ],
+  "entryPointStrategy": "expand",
+  "exclude": [
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ],
+  "tsconfig": "tsconfig.app.json",
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "skipErrorChecking": true,
+  "githubPages": false,
+  "navigationLinks": {
+    "Repo": "https://github.com"
+  },
+  "categorizeByGroup": true
+}

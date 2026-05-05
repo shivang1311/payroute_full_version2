@@ -1,3 +1,8 @@
+/**
+ * Party + Account Directory endpoints — CRUD over parties, customer accounts,
+ * and beneficiaries; alias resolution and ownership validation.
+ * Backed by party-service.
+ */
 import apiClient from './client';
 import type { ApiResponse, PagedResponse, Party, Account, AliasType, AccountValidationResponse } from '../types';
 

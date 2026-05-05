@@ -22,6 +22,12 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+/**
+ * A counterparty in the system — either an INDIVIDUAL or a CORPORATE. Owns
+ * one or more {@link AccountDirectory} rows. Soft-deleted via {@code deletedAt}
+ * rather than removed, so audit trails (payments, ledger entries) keep their
+ * party reference intact.
+ */
 @Data
 @Builder
 @NoArgsConstructor

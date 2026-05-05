@@ -14,6 +14,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Builds an account statement for a given (accountId, from, to) range:
+ * computes opening balance from prior entries, walks the in-range entries to
+ * derive a running balance per line, totals credits/debits, and renders a
+ * RFC-4180 CSV when requested.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

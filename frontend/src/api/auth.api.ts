@@ -1,6 +1,11 @@
+/**
+ * Auth & user-management endpoints — login, register, refresh, logout,
+ * password change, and admin user CRUD. Backed by iam-service.
+ */
 import apiClient from './client';
 import type { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, User, PagedResponse } from '../types';
 
+/** Authentication flows (login, register, refresh, logout, change-password). */
 export const authApi = {
   login: (data: LoginRequest) =>
     apiClient.post<ApiResponse<AuthResponse>>('/auth/login', data),
@@ -21,6 +26,7 @@ export const authApi = {
     }),
 };
 
+/** User CRUD + profile / PIN endpoints. */
 export const userApi = {
   getAll: (page = 0, size = 10) =>
     apiClient.get<ApiResponse<PagedResponse<User>>>('/users', { params: { page, size } }),

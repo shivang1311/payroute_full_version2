@@ -26,6 +26,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * CRUD over {@link com.payroute.party.entity.AccountDirectory} — both the
+ * customer's own bank accounts and saved beneficiaries (linked by the same
+ * {@code partyId}). Also seeds a ₹10,00,000 opening balance via ledger-service
+ * when a fresh INR account is created, and exposes the account-validation
+ * helpers other services use to verify ownership before serving sensitive data.
+ */
 @Slf4j
 @Service
 @Transactional(readOnly = true)

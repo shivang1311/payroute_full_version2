@@ -28,6 +28,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST endpoints for {@link com.payroute.party.entity.Party} CRUD —
+ * individuals and corporates. Used by registration, KYC, and admin party
+ * management screens.
+ */
 @RestController
 @RequestMapping("/api/v1/parties")
 @RequiredArgsConstructor

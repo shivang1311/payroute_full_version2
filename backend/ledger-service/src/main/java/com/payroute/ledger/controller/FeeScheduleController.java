@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST endpoints for managing {@link com.payroute.ledger.entity.FeeSchedule}
+ * rows — the per-rail fee table consulted by {@link FeeService} when posting
+ * a payment. Admin-only CRUD.
+ */
 @RestController
 @RequestMapping("/api/v1/ledger/fees")
 @RequiredArgsConstructor

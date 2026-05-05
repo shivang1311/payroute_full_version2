@@ -2,7 +2,7 @@
  * PDF generator for settlement reports.
  *
  * Builds a multi-section PDF using jsPDF + jspdf-autotable. The shape of
- * {@code report.metrics} mirrors what the Reports page renders on screen:
+ * `report.metrics` mirrors what the Reports page renders on screen:
  * top-level scalars become a "Summary" key/value table, and nested objects
  * become breakdown tables (e.g. statusBreakdown, railBreakdown).
  */

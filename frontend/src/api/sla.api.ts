@@ -1,3 +1,7 @@
+/**
+ * SLA configuration — per-rail/per-product cutoff times and breach thresholds
+ * used by the settlement and exception services.
+ */
 import apiClient from './client';
 import type { ApiResponse } from '../types';
 import type { SlaConfig, SlaConfigRequest } from '../types/sla';

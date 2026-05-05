@@ -9,6 +9,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * One immutable line in the internal ledger. Identified by (paymentId, accountId,
+ * entryType): a single payment usually generates a DEBIT on the debtor account,
+ * a CREDIT on the creditor account, and a FEE on the bank's revenue account.
+ * Reversals create REVERSAL rows rather than mutating the originals.
+ */
 @Entity
 @Table(name = "ledger_entry", indexes = {
         @Index(name = "idx_ledger_payment_id", columnList = "payment_id"),

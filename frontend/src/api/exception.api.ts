@@ -1,3 +1,8 @@
+/**
+ * Exception queue — cases (open/in-progress/resolved/escalated), inbound
+ * returns, and the reconciliation runs that detect breaks. Backed by
+ * exception-service.
+ */
 import apiClient from './client';
 import type { ApiResponse, PagedResponse, ExceptionCase, ReturnItem, ReconciliationRecord } from '../types';
 

@@ -12,6 +12,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Spring Data repository over {@link LedgerEntry}. Provides the standard
+ * lookups (by paymentId / accountId / date range) plus aggregation queries
+ * used by reconciliation, fee-income reporting, and statement generation.
+ */
 @Repository
 public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> {
 

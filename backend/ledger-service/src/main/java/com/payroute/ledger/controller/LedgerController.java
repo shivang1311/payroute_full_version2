@@ -20,6 +20,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * REST endpoints for the internal ledger: entry posting, payment-level
+ * debit/credit/fee batches, reversals, account summary, statements (JSON + CSV),
+ * GL export, and fee-income stats. Customer reads are gated by
+ * {@code enforceAccountOwnership} — a CUSTOMER caller may only access entries
+ * for accounts owned by their party (verified via party-service).
+ */
 @RestController
 @RequestMapping("/api/v1/ledger")
 @RequiredArgsConstructor

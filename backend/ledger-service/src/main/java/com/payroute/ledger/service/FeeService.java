@@ -18,6 +18,12 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Fee-schedule CRUD plus the {@code computeFee()} engine used by
+ * {@link LedgerService} when posting a payment. Selects the fee row by
+ * (product, rail, currency) and applies FLAT, PERCENT, or TIERED rules
+ * with a configurable cap/floor.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -38,7 +38,7 @@ const cleanNarrative = (v: string | null | undefined, isCustomer: boolean): stri
 
 export interface StatementPdfOpts {
   isCustomer: boolean;
-  /** Period the statement covers (display only — values come from {@code statement}). */
+  /** Period the statement covers (display only — values come from `statement`). */
   from: string;
   to: string;
   /** Optional friendly account label (account number / alias) for the header. */

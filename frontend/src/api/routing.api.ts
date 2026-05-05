@@ -1,3 +1,7 @@
+/**
+ * Routing rules and the rail instructions emitted by the routing engine for
+ * a payment. Backed by routing-service.
+ */
 import apiClient from './client';
 import type { ApiResponse, PagedResponse, RoutingRule, RailInstruction } from '../types';
 

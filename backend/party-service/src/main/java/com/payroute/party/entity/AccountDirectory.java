@@ -23,6 +23,12 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+/**
+ * A bank account linked to a {@link Party}. The same row shape stores both the
+ * customer's own accounts and saved beneficiaries (no OWN/BENEFICIARY flag —
+ * a beneficiary is just another row whose {@code partyId} equals the
+ * customer's). Unique on (accountNumber, ifsc) to prevent duplicates.
+ */
 @Data
 @Builder
 @NoArgsConstructor

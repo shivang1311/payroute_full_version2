@@ -10,6 +10,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * A fee row consulted at posting time. Keyed by (product, rail, currency); the
+ * active row for a given date drives the FLAT/PERCENT/TIERED computation in
+ * {@link com.payroute.ledger.service.FeeService#computeFee}. {@code minFee} and
+ * {@code maxFee} are optional clamps applied after the base computation.
+ */
 @Entity
 @Table(name = "fee_schedule", indexes = {
         @Index(name = "idx_fee_product_rail", columnList = "product, rail")

@@ -1,3 +1,7 @@
+/**
+ * Aggregated dashboard stats — payment counts/totals, per-rail breakdowns,
+ * and fee income. Backed by payment-service + ledger-service joined queries.
+ */
 import apiClient from './client';
 import type { ApiResponse } from '../types';
 import type { PaymentStats, RailStat, FeeIncomeStats } from '../types/dashboard';

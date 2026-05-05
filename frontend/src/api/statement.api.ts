@@ -1,3 +1,7 @@
+/**
+ * Account statement download — JSON for on-screen rendering and CSV for
+ * customer download. Backed by ledger-service.
+ */
 import apiClient from './client';
 import type { ApiResponse } from '../types';
 import type { Statement } from '../types/statement';

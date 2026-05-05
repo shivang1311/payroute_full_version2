@@ -23,6 +23,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Core posting logic for the internal ledger. Generates the debit/credit/fee
+ * triplet for a payment, books reversals, and serves paged read queries. All
+ * write paths are transactional with SERIALIZABLE isolation to keep balances
+ * consistent under concurrent posting.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

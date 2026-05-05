@@ -27,6 +27,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST endpoints for the {@link com.payroute.party.entity.AccountDirectory} —
+ * account CRUD, validation by ID/account-number/IFSC, and the helper used by
+ * other services to verify ownership before reading sensitive data.
+ */
 @RestController
 @RequestMapping("/api/v1/accounts")
 @RequiredArgsConstructor
