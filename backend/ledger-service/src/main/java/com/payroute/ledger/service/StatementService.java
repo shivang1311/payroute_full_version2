@@ -1,7 +1,6 @@
 package com.payroute.ledger.service;
 
 import com.payroute.ledger.dto.response.StatementResponse;
-import com.payroute.ledger.entity.EntryType;
 import com.payroute.ledger.entity.LedgerEntry;
 import com.payroute.ledger.repository.LedgerEntryRepository;
 import lombok.RequiredArgsConstructor;

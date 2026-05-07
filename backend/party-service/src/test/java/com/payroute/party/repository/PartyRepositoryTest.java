@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +27,6 @@ class PartyRepositoryTest {
 
     private Party active;
     private Party deleted;
-    private Party suspended;
 
     @BeforeEach
     void seed() {
@@ -38,11 +36,13 @@ class PartyRepositoryTest {
                 .name("Acme Corp").type(PartyType.CORPORATE).country("IND")
                 .riskRating("LOW").status(PartyStatus.ACTIVE).build());
 
-        suspended = partyRepository.save(Party.builder()
+        // Suspended row — exercised by status-filter tests only, no field reference needed.
+        partyRepository.save(Party.builder()
                 .name("Beta Ltd").type(PartyType.CORPORATE).country("IND")
                 .riskRating("HIGH").status(PartyStatus.SUSPENDED).build());
 
-        Party individual = partyRepository.save(Party.builder()
+        // Individual party — exercised by type-filter tests only.
+        partyRepository.save(Party.builder()
                 .name("John Doe").type(PartyType.INDIVIDUAL).country("USA")
                 .riskRating("STANDARD").status(PartyStatus.ACTIVE).build());
 

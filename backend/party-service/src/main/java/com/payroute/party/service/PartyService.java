@@ -29,6 +29,9 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class PartyService {
 
+    /** Resource name used in {@link ResourceNotFoundException} messages. */
+    private static final String RESOURCE_PARTY = "Party";
+
     private final PartyRepository partyRepository;
     private final PartyMapper partyMapper;
 
@@ -50,7 +53,7 @@ public class PartyService {
 
     public PartyResponse getPartyById(Long id) {
         Party party = partyRepository.findActiveById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Party", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_PARTY, "id", id));
         return partyMapper.toResponse(party);
     }
 
@@ -66,7 +69,7 @@ public class PartyService {
     @Transactional
     public PartyResponse updateParty(Long id, PartyRequest request) {
         Party party = partyRepository.findActiveById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Party", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_PARTY, "id", id));
 
         partyMapper.updateEntity(request, party);
         party = partyRepository.save(party);
@@ -77,7 +80,7 @@ public class PartyService {
     @Transactional
     public void deleteParty(Long id) {
         Party party = partyRepository.findActiveById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Party", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_PARTY, "id", id));
 
         party.setDeletedAt(LocalDateTime.now());
         party.setStatus(PartyStatus.INACTIVE);

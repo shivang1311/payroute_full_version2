@@ -82,7 +82,7 @@ class AccountDirectoryServiceTest {
             when(partyRepo.findActiveById(1L)).thenReturn(Optional.of(party));
             when(accountRepo.save(any(AccountDirectory.class))).thenReturn(account);
 
-            AccountResponse resp = service.createAccount(req);
+            AccountResponse resp = service.createAccount(req, null);
 
             assertThat(resp.getId()).isEqualTo(10L);
             verify(accountRepo).save(any(AccountDirectory.class));
@@ -92,7 +92,7 @@ class AccountDirectoryServiceTest {
         @DisplayName("rejects malformed IFSC/IBAN")
         void invalidIfsc() {
             req.setIfscIban("not-an-ifsc");
-            assertThatThrownBy(() -> service.createAccount(req))
+            assertThatThrownBy(() -> service.createAccount(req, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Invalid IFSC/IBAN");
         }
@@ -107,7 +107,7 @@ class AccountDirectoryServiceTest {
             when(partyRepo.findActiveById(1L)).thenReturn(Optional.of(party));
             when(accountRepo.save(any(AccountDirectory.class))).thenReturn(account);
 
-            assertThat(service.createAccount(req)).isNotNull();
+            assertThat(service.createAccount(req, null)).isNotNull();
         }
 
         @Test
@@ -117,7 +117,7 @@ class AccountDirectoryServiceTest {
                     .thenReturn(java.util.stream.IntStream.range(0, 10)
                             .mapToObj(i -> AccountDirectory.builder().id((long) i).build())
                             .toList());
-            assertThatThrownBy(() -> service.createAccount(req))
+            assertThatThrownBy(() -> service.createAccount(req, null))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("maximum");
         }
@@ -127,7 +127,7 @@ class AccountDirectoryServiceTest {
         void dupAccountIfsc() {
             when(accountRepo.findByPartyId(anyLong())).thenReturn(Collections.emptyList());
             when(accountRepo.existsByAccountNumberAndIfscIban(anyString(), anyString())).thenReturn(true);
-            assertThatThrownBy(() -> service.createAccount(req))
+            assertThatThrownBy(() -> service.createAccount(req, null))
                     .isInstanceOf(DuplicateResourceException.class);
         }
 
@@ -137,7 +137,7 @@ class AccountDirectoryServiceTest {
             when(accountRepo.findByPartyId(anyLong())).thenReturn(Collections.emptyList());
             when(accountRepo.existsByAccountNumberAndIfscIban(anyString(), anyString())).thenReturn(false);
             when(accountRepo.existsByAccountNumber(anyString())).thenReturn(true);
-            assertThatThrownBy(() -> service.createAccount(req))
+            assertThatThrownBy(() -> service.createAccount(req, null))
                     .isInstanceOf(DuplicateResourceException.class);
         }
 
@@ -149,7 +149,7 @@ class AccountDirectoryServiceTest {
             when(accountRepo.existsByAccountNumberAndIfscIban(anyString(), anyString())).thenReturn(false);
             when(accountRepo.existsByAccountNumber(anyString())).thenReturn(false);
             when(accountRepo.existsByVpaUpiId("alice@upi")).thenReturn(true);
-            assertThatThrownBy(() -> service.createAccount(req))
+            assertThatThrownBy(() -> service.createAccount(req, null))
                     .isInstanceOf(DuplicateResourceException.class);
         }
 
@@ -161,7 +161,7 @@ class AccountDirectoryServiceTest {
             when(accountRepo.existsByAccountNumberAndIfscIban(anyString(), anyString())).thenReturn(false);
             when(accountRepo.existsByAccountNumber(anyString())).thenReturn(false);
             when(accountRepo.existsByPhone("9000000001")).thenReturn(true);
-            assertThatThrownBy(() -> service.createAccount(req))
+            assertThatThrownBy(() -> service.createAccount(req, null))
                     .isInstanceOf(DuplicateResourceException.class);
         }
 
@@ -173,7 +173,7 @@ class AccountDirectoryServiceTest {
             when(accountRepo.existsByAccountNumberAndIfscIban(anyString(), anyString())).thenReturn(false);
             when(accountRepo.existsByAccountNumber(anyString())).thenReturn(false);
             when(accountRepo.existsByEmail("alice@x.com")).thenReturn(true);
-            assertThatThrownBy(() -> service.createAccount(req))
+            assertThatThrownBy(() -> service.createAccount(req, null))
                     .isInstanceOf(DuplicateResourceException.class);
         }
 
@@ -184,7 +184,7 @@ class AccountDirectoryServiceTest {
             when(accountRepo.existsByAccountNumberAndIfscIban(anyString(), anyString())).thenReturn(false);
             when(accountRepo.existsByAccountNumber(anyString())).thenReturn(false);
             when(partyRepo.findActiveById(1L)).thenReturn(Optional.empty());
-            assertThatThrownBy(() -> service.createAccount(req))
+            assertThatThrownBy(() -> service.createAccount(req, null))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
 
@@ -217,7 +217,7 @@ class AccountDirectoryServiceTest {
             when(partyRepo.findActiveById(1L)).thenReturn(Optional.of(party));
             when(accountRepo.save(any(AccountDirectory.class))).thenReturn(account);
 
-            AccountResponse resp = service.updateAccount(10L, req);
+            AccountResponse resp = service.updateAccount(10L, req, null);
             assertThat(resp).isNotNull();
             verify(accountMapper).updateEntity(req, account);
         }
@@ -226,14 +226,14 @@ class AccountDirectoryServiceTest {
         void rejectsAccountDup() {
             when(accountRepo.findActiveById(10L)).thenReturn(Optional.of(account));
             when(accountRepo.existsByAccountNumberAndIdNot(anyString(), anyLong())).thenReturn(true);
-            assertThatThrownBy(() -> service.updateAccount(10L, req))
+            assertThatThrownBy(() -> service.updateAccount(10L, req, null))
                     .isInstanceOf(DuplicateResourceException.class);
         }
 
         @Test
         void rejectsWhenAccountMissing() {
             when(accountRepo.findActiveById(99L)).thenReturn(Optional.empty());
-            assertThatThrownBy(() -> service.updateAccount(99L, req))
+            assertThatThrownBy(() -> service.updateAccount(99L, req, null))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }
@@ -246,7 +246,7 @@ class AccountDirectoryServiceTest {
         @Test
         void marksDeletedAndInactive() {
             when(accountRepo.findActiveById(10L)).thenReturn(Optional.of(account));
-            service.deleteAccount(10L);
+            service.deleteAccount(10L, null);
             assertThat(account.getDeletedAt()).isNotNull();
             assertThat(account.isActive()).isFalse();
             verify(accountRepo).save(account);
@@ -255,7 +255,7 @@ class AccountDirectoryServiceTest {
         @Test
         void notFound() {
             when(accountRepo.findActiveById(99L)).thenReturn(Optional.empty());
-            assertThatThrownBy(() -> service.deleteAccount(99L))
+            assertThatThrownBy(() -> service.deleteAccount(99L, null))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }

@@ -7,7 +7,6 @@ import com.payroute.ledger.dto.response.LedgerEntryResponse;
 import com.payroute.ledger.dto.response.StatementResponse;
 import com.payroute.ledger.entity.EntryType;
 import com.payroute.ledger.entity.LedgerEntry;
-import com.payroute.ledger.entity.RailType;
 import com.payroute.ledger.exception.ResourceNotFoundException;
 import com.payroute.ledger.service.LedgerService;
 import org.junit.jupiter.api.Test;
@@ -100,8 +99,7 @@ class LedgerControllerTest {
 
     @Test
     void getEntries_byPaymentId() throws Exception {
-        org.springframework.data.domain.Page<LedgerEntryResponse> dummy = org.springframework.data.domain.Page.empty();
-        // Service returns PagedResponse, not Page — match what the controller expects
+        // Service returns a PagedResponse — that's what the controller expects.
         when(ledgerService.getEntries(eq(10L), any(), any(), any(), any()))
                 .thenReturn(com.payroute.ledger.dto.response.PagedResponse.<LedgerEntryResponse>builder()
                         .content(List.of(stub())).page(0).size(20)

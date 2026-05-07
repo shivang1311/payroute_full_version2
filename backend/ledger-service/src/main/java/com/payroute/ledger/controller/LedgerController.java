@@ -33,6 +33,9 @@ import java.util.List;
 @Tag(name = "Ledger", description = "Ledger entry management APIs")
 public class LedgerController {
 
+    /** Role that triggers the ownership / read-restriction checks. */
+    private static final String ROLE_CUSTOMER = "CUSTOMER";
+
     private final LedgerService ledgerService;
     private final LedgerEntryRepository ledgerEntryRepository;
     private final com.payroute.ledger.service.StatementService statementService;
@@ -44,7 +47,7 @@ public class LedgerController {
      * Other callers without a role header (internal service-to-service) also bypass.
      */
     private void enforceAccountOwnership(Long accountId, String role, String partyIdHeader) {
-        if (!"CUSTOMER".equalsIgnoreCase(role)) return;
+        if (!ROLE_CUSTOMER.equalsIgnoreCase(role)) return;
         if (accountId == null) {
             throw new com.payroute.ledger.exception.ForbiddenException("Account id is required");
         }
@@ -120,7 +123,7 @@ public class LedgerController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestHeader(value = "X-User-Role", required = false) String role) {
-        if ("CUSTOMER".equalsIgnoreCase(role)) {
+        if (ROLE_CUSTOMER.equalsIgnoreCase(role)) {
             throw new com.payroute.ledger.exception.ForbiddenException(
                     "Customers are not authorized to export the full ledger");
         }
@@ -220,7 +223,7 @@ public class LedgerController {
             @RequestHeader(value = "X-User-Role", required = false) String role,
             @RequestHeader(value = "X-Party-Id", required = false) String partyId) {
         // Customers must target a specific account they own; unfiltered / other-account reads are blocked.
-        if ("CUSTOMER".equalsIgnoreCase(role)) {
+        if (ROLE_CUSTOMER.equalsIgnoreCase(role)) {
             if (accountId == null) {
                 throw new com.payroute.ledger.exception.ForbiddenException(
                         "accountId is required for customer ledger queries");

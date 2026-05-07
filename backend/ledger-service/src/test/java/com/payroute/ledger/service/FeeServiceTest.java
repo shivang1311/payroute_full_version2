@@ -132,8 +132,10 @@ class FeeServiceTest {
         @DisplayName("throws ResourceNotFoundException if no active schedule matches")
         void noScheduleFound() {
             when(repo.findActiveSchedule(any(), any(), any())).thenReturn(Optional.empty());
-            assertThatThrownBy(() -> service.computeFee("PAYMENT", RailType.WIRE,
-                    new BigDecimal("1000"), LocalDate.now()))
+            // Extracted out of the lambda to satisfy S5778.
+            BigDecimal amount = new BigDecimal("1000");
+            LocalDate today = LocalDate.now();
+            assertThatThrownBy(() -> service.computeFee("PAYMENT", RailType.WIRE, amount, today))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }

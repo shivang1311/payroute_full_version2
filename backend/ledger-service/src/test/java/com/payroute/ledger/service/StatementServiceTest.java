@@ -54,18 +54,22 @@ class StatementServiceTest {
         @Test
         @DisplayName("rejects null from/to dates")
         void rejectsNullDates() {
-            assertThatThrownBy(() -> service.generate(30L, null, LocalDate.now()))
+            // Extracted out of the lambda to satisfy S5778 (only one possibly-throwing
+            // call inside `assertThatThrownBy`).
+            LocalDate today = LocalDate.now();
+            assertThatThrownBy(() -> service.generate(30L, null, today))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("from and to dates");
-            assertThatThrownBy(() -> service.generate(30L, LocalDate.now(), null))
+            assertThatThrownBy(() -> service.generate(30L, today, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         @DisplayName("rejects to-date earlier than from-date")
         void rejectsInvertedRange() {
-            assertThatThrownBy(() -> service.generate(
-                    30L, LocalDate.of(2026, 5, 5), LocalDate.of(2026, 5, 1)))
+            LocalDate from = LocalDate.of(2026, 5, 5);
+            LocalDate to = LocalDate.of(2026, 5, 1);
+            assertThatThrownBy(() -> service.generate(30L, from, to))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("on/after");
         }
@@ -149,13 +153,15 @@ class StatementServiceTest {
 
             String csv = service.toCsv(stmt);
 
-            assertThat(csv).contains("Account ID,30");
-            assertThat(csv).contains("Currency,INR");
-            assertThat(csv).contains("Period,2026-05-01 to 2026-05-05");
-            assertThat(csv).contains("Opening Balance,1000");
-            assertThat(csv).contains("Closing Balance,1500");
-            assertThat(csv).contains("Total Credits,500");
-            assertThat(csv).contains("Total Debits,0");
+            // Chain assertions per S5853 — single subject, all expectations together.
+            assertThat(csv)
+                    .contains("Account ID,30")
+                    .contains("Currency,INR")
+                    .contains("Period,2026-05-01 to 2026-05-05")
+                    .contains("Opening Balance,1000")
+                    .contains("Closing Balance,1500")
+                    .contains("Total Credits,500")
+                    .contains("Total Debits,0");
         }
 
         @Test
@@ -176,9 +182,11 @@ class StatementServiceTest {
 
             String csv = service.toCsv(stmt);
 
-            assertThat(csv).contains("Currency,\n");
-            // Should not throw — null entries list is a valid empty body case
-            assertThat(csv).contains("Entry ID,Payment ID");
+            // null entries list is a valid empty body case — must not throw,
+            // and the standard header row should still be emitted.
+            assertThat(csv)
+                    .contains("Currency,\n")
+                    .contains("Entry ID,Payment ID");
         }
 
         @Test
@@ -228,14 +236,15 @@ class StatementServiceTest {
 
             String csv = service.toCsv(stmt);
 
-            // Commas in fields force enclosing quotes
-            assertThat(csv).contains("\"Salary, May\"");
-            // Existing quotes are doubled per RFC-4180
-            assertThat(csv).contains("\"ref \"\"R-1\"\"\"");
-            // Newlines trigger quoting too
-            assertThat(csv).contains("\"line\nbreak\"");
-            // null payment id, postedAt, debit, credit, currency become empty fields
-            assertThat(csv).contains("2,,2026-05-02,,DEBIT,50,0,INR,");
+            assertThat(csv)
+                    // Commas in fields force enclosing quotes
+                    .contains("\"Salary, May\"")
+                    // Existing quotes are doubled per RFC-4180
+                    .contains("\"ref \"\"R-1\"\"\"")
+                    // Newlines trigger quoting too
+                    .contains("\"line\nbreak\"")
+                    // null payment id, postedAt, debit, credit, currency become empty fields
+                    .contains("2,,2026-05-02,,DEBIT,50,0,INR,");
         }
     }
 }

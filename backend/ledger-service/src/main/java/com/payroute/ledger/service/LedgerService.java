@@ -34,6 +34,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LedgerService {
 
+    /**
+     * Marker we write to {@code created_by} for ledger entries the system posts
+     * automatically (no human user behind the action). Manually-posted entries
+     * via the API set this from the authenticated principal instead.
+     */
+    private static final String CREATED_BY_SYSTEM = "SYSTEM";
+
     private final LedgerEntryRepository ledgerEntryRepository;
     private final LedgerEntryMapper ledgerEntryMapper;
     private final FeeService feeService;
@@ -46,7 +53,7 @@ public class LedgerService {
     public LedgerEntryResponse postEntry(LedgerPostRequest request) {
         LedgerEntry entry = ledgerEntryMapper.toEntity(request);
         entry.setEntryDate(LocalDate.now());
-        entry.setCreatedBy("SYSTEM");
+        entry.setCreatedBy(CREATED_BY_SYSTEM);
 
         LedgerEntry saved = ledgerEntryRepository.save(entry);
         log.info("Posted ledger entry id={}, paymentId={}, type={}, amount={}",
@@ -57,18 +64,8 @@ public class LedgerService {
     /**
      * Post the full set of payment entries: DEBIT for debtor, CREDIT for creditor,
      * and FEE entry computed via FeeService. All within a single SERIALIZABLE transaction.
-     */
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    public List<LedgerEntryResponse> postPaymentEntries(Long paymentId, Long debtorAccountId,
-                                                         Long creditorAccountId, BigDecimal amount,
-                                                         String currency, RailType rail) {
-        return postPaymentEntries(paymentId, debtorAccountId, creditorAccountId, amount, currency, rail, null);
-    }
-
-    /**
-     * Same as the 6-arg form but accepts a {@code paymentMethod} hint.
-     * When the caller's payment method is UPI, the fee leg is skipped — UPI
-     * transactions are zero-fee per product policy.
+     * When {@code paymentMethod} is "UPI" the fee leg is skipped — UPI transactions
+     * are zero-fee per product policy. Pass {@code null} for non-UPI rails.
      */
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public List<LedgerEntryResponse> postPaymentEntries(Long paymentId, Long debtorAccountId,
@@ -87,7 +84,7 @@ public class LedgerService {
                 .currency(currency)
                 .narrative("Payment debit - PaymentId: " + paymentId)
                 .entryDate(today)
-                .createdBy("SYSTEM")
+                .createdBy(CREATED_BY_SYSTEM)
                 .build();
         entries.add(ledgerEntryRepository.save(debitEntry));
 
@@ -100,7 +97,7 @@ public class LedgerService {
                 .currency(currency)
                 .narrative("Payment credit - PaymentId: " + paymentId)
                 .entryDate(today)
-                .createdBy("SYSTEM")
+                .createdBy(CREATED_BY_SYSTEM)
                 .build();
         entries.add(ledgerEntryRepository.save(creditEntry));
 
@@ -123,7 +120,7 @@ public class LedgerService {
                         .currency(currency)
                         .narrative("Processing fee - Rail: " + rail + ", PaymentId: " + paymentId)
                         .entryDate(today)
-                        .createdBy("SYSTEM")
+                        .createdBy(CREATED_BY_SYSTEM)
                         .build();
                 entries.add(ledgerEntryRepository.save(feeEntry));
             }
@@ -165,7 +162,7 @@ public class LedgerService {
                     .currency(original.getCurrency())
                     .narrative("Reversal of " + original.getEntryType() + " entry (id=" + original.getId() + ")")
                     .entryDate(today)
-                    .createdBy("SYSTEM")
+                    .createdBy(CREATED_BY_SYSTEM)
                     .build();
             reversalEntries.add(ledgerEntryRepository.save(reversal));
         }
@@ -241,10 +238,8 @@ public class LedgerService {
                 case DEBIT -> totalDebits = totalDebits.add(entry.getAmount());
                 case CREDIT -> totalCredits = totalCredits.add(entry.getAmount());
                 case FEE -> totalFees = totalFees.add(entry.getAmount());
-                case REVERSAL -> {
-                    // Reversals offset the original; treat as credit for summary
-                    totalCredits = totalCredits.add(entry.getAmount());
-                }
+                // Reversals offset the original; treat as credit for summary.
+                case REVERSAL -> totalCredits = totalCredits.add(entry.getAmount());
                 case TAX -> totalFees = totalFees.add(entry.getAmount());
             }
         }

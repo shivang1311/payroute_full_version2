@@ -48,6 +48,12 @@ public class AccountDirectoryService {
     /** Seed credit applied to every newly created INR account so customers can transact. */
     private static final BigDecimal OPENING_BALANCE_INR = new BigDecimal("1000000.00");
 
+    // Centralized literals — referenced by ResourceNotFoundException / DuplicateResourceException
+    // and the user-facing notification text. Keeps wording consistent and avoids the
+    // SonarLint S1192 "duplicated string literal" warnings.
+    private static final String RESOURCE_ACCOUNT = "Account";
+    private static final String NOTIF_ACCOUNT_PREFIX = "Your account ";
+
     /**
      * Post a CREDIT ledger entry of {@link #OPENING_BALANCE_INR} so the new account
      * has a usable balance for transactions. Only applied to INR accounts.
@@ -107,7 +113,7 @@ public class AccountDirectoryService {
 
     public AccountResponse getAccountById(Long id) {
         AccountDirectory account = accountDirectoryRepository.findActiveById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_ACCOUNT, "id", id));
         return accountMapper.toResponse(account);
     }
 
@@ -115,7 +121,7 @@ public class AccountDirectoryService {
     private static final java.util.regex.Pattern IFSC_PATTERN =
             java.util.regex.Pattern.compile("^[A-Z]{4}0[A-Z0-9]{6}$");
     private static final java.util.regex.Pattern IBAN_PATTERN =
-            java.util.regex.Pattern.compile("^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$");
+            java.util.regex.Pattern.compile("^[A-Z]{2}\\d{2}[A-Z0-9]{10,30}$");
 
     private static final int MAX_ACCOUNTS_PER_PARTY = 10;
 
@@ -128,11 +134,11 @@ public class AccountDirectoryService {
         }
     }
 
-    @Transactional
-    public AccountResponse createAccount(AccountRequest request) {
-        return createAccount(request, null);
-    }
-
+    /**
+     * Create a new account. Pass {@code actingUser} as the username doing the
+     * action so the "Account added" notification can be fanned out to them;
+     * pass {@code null} for internal/system creations that don't need notifying.
+     */
     @Transactional
     public AccountResponse createAccount(AccountRequest request, String actingUser) {
         // IFSC / IBAN format
@@ -151,28 +157,28 @@ public class AccountDirectoryService {
         if (request.getIfscIban() != null &&
                 accountDirectoryRepository.existsByAccountNumberAndIfscIban(
                         request.getAccountNumber(), request.getIfscIban())) {
-            throw new DuplicateResourceException("Account", "accountNumber/ifscIban",
+            throw new DuplicateResourceException(RESOURCE_ACCOUNT, "accountNumber/ifscIban",
                     request.getAccountNumber() + "/" + request.getIfscIban());
         }
         // Duplicate account number across the directory (defensive — catches typos where IFSC varies)
         if (request.getAccountNumber() != null &&
                 accountDirectoryRepository.existsByAccountNumber(request.getAccountNumber())) {
-            throw new DuplicateResourceException("Account", "accountNumber", request.getAccountNumber());
+            throw new DuplicateResourceException(RESOURCE_ACCOUNT, "accountNumber", request.getAccountNumber());
         }
         // Duplicate VPA / UPI ID — globally unique
         if (request.getVpaUpiId() != null && !request.getVpaUpiId().isBlank() &&
                 accountDirectoryRepository.existsByVpaUpiId(request.getVpaUpiId())) {
-            throw new DuplicateResourceException("Account", "vpaUpiId", request.getVpaUpiId());
+            throw new DuplicateResourceException(RESOURCE_ACCOUNT, "vpaUpiId", request.getVpaUpiId());
         }
         // Duplicate phone alias
         if (request.getPhone() != null && !request.getPhone().isBlank() &&
                 accountDirectoryRepository.existsByPhone(request.getPhone())) {
-            throw new DuplicateResourceException("Account", "phone", request.getPhone());
+            throw new DuplicateResourceException(RESOURCE_ACCOUNT, "phone", request.getPhone());
         }
         // Duplicate email alias
         if (request.getEmail() != null && !request.getEmail().isBlank() &&
                 accountDirectoryRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("Account", "email", request.getEmail());
+            throw new DuplicateResourceException(RESOURCE_ACCOUNT, "email", request.getEmail());
         }
 
         Party party = partyRepository.findActiveById(request.getPartyId())
@@ -189,22 +195,21 @@ public class AccountDirectoryService {
 
         sendNotificationSafe(actingUser,
                 "Account added",
-                "Your account " + account.getAccountNumber() + " (" + account.getIfscIban() + ") has been successfully added.",
+                NOTIF_ACCOUNT_PREFIX + account.getAccountNumber() + " (" + account.getIfscIban() + ") has been successfully added.",
                 "INFO",
                 account.getId());
 
         return accountMapper.toResponse(account);
     }
 
-    @Transactional
-    public AccountResponse updateAccount(Long id, AccountRequest request) {
-        return updateAccount(id, request, null);
-    }
-
+    /**
+     * Update an existing account. {@code actingUser} drives the notification
+     * recipient (pass {@code null} for system updates).
+     */
     @Transactional
     public AccountResponse updateAccount(Long id, AccountRequest request, String actingUser) {
         AccountDirectory account = accountDirectoryRepository.findActiveById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_ACCOUNT, "id", id));
 
         // IFSC / IBAN format
         validateIfscIban(request.getIfscIban());
@@ -212,19 +217,19 @@ public class AccountDirectoryService {
         // Duplicate checks that exclude the current row
         if (request.getAccountNumber() != null &&
                 accountDirectoryRepository.existsByAccountNumberAndIdNot(request.getAccountNumber(), id)) {
-            throw new DuplicateResourceException("Account", "accountNumber", request.getAccountNumber());
+            throw new DuplicateResourceException(RESOURCE_ACCOUNT, "accountNumber", request.getAccountNumber());
         }
         if (request.getVpaUpiId() != null && !request.getVpaUpiId().isBlank() &&
                 accountDirectoryRepository.existsByVpaUpiIdAndIdNot(request.getVpaUpiId(), id)) {
-            throw new DuplicateResourceException("Account", "vpaUpiId", request.getVpaUpiId());
+            throw new DuplicateResourceException(RESOURCE_ACCOUNT, "vpaUpiId", request.getVpaUpiId());
         }
         if (request.getPhone() != null && !request.getPhone().isBlank() &&
                 accountDirectoryRepository.existsByPhoneAndIdNot(request.getPhone(), id)) {
-            throw new DuplicateResourceException("Account", "phone", request.getPhone());
+            throw new DuplicateResourceException(RESOURCE_ACCOUNT, "phone", request.getPhone());
         }
         if (request.getEmail() != null && !request.getEmail().isBlank() &&
                 accountDirectoryRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
-            throw new DuplicateResourceException("Account", "email", request.getEmail());
+            throw new DuplicateResourceException(RESOURCE_ACCOUNT, "email", request.getEmail());
         }
 
         Party party = partyRepository.findActiveById(request.getPartyId())
@@ -240,22 +245,21 @@ public class AccountDirectoryService {
 
         sendNotificationSafe(actingUser,
                 "Account updated",
-                "Your account " + account.getAccountNumber() + " has been updated.",
+                NOTIF_ACCOUNT_PREFIX + account.getAccountNumber() + " has been updated.",
                 "INFO",
                 account.getId());
 
         return accountMapper.toResponse(account);
     }
 
-    @Transactional
-    public void deleteAccount(Long id) {
-        deleteAccount(id, null);
-    }
-
+    /**
+     * Soft-delete an account. {@code actingUser} drives the notification
+     * recipient (pass {@code null} for system removals).
+     */
     @Transactional
     public void deleteAccount(Long id, String actingUser) {
         AccountDirectory account = accountDirectoryRepository.findActiveById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_ACCOUNT, "id", id));
 
         account.setDeletedAt(LocalDateTime.now());
         account.setActive(false);
@@ -264,7 +268,7 @@ public class AccountDirectoryService {
 
         sendNotificationSafe(actingUser,
                 "Account removed",
-                "Your account " + account.getAccountNumber() + " has been removed.",
+                NOTIF_ACCOUNT_PREFIX + account.getAccountNumber() + " has been removed.",
                 "WARN",
                 account.getId());
     }
@@ -302,7 +306,7 @@ public class AccountDirectoryService {
 
     public AccountResponse findByAlias(String alias) {
         AccountDirectory account = accountDirectoryRepository.findByAlias(alias)
-                .orElseThrow(() -> new ResourceNotFoundException("Account", "alias", alias));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_ACCOUNT, "alias", alias));
         return accountMapper.toResponse(account);
     }
 
@@ -317,13 +321,13 @@ public class AccountDirectoryService {
         String type = aliasType.trim().toUpperCase();
         AccountDirectory account = switch (type) {
             case "VPA", "UPI" -> accountDirectoryRepository.findByVpaUpiId(value)
-                    .orElseThrow(() -> new ResourceNotFoundException("Account", "vpa", value));
+                    .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_ACCOUNT, "vpa", value));
             case "PHONE", "MSISDN" -> accountDirectoryRepository.findByPhone(value)
-                    .orElseThrow(() -> new ResourceNotFoundException("Account", "phone", value));
+                    .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_ACCOUNT, "phone", value));
             case "EMAIL" -> accountDirectoryRepository.findByEmail(value)
-                    .orElseThrow(() -> new ResourceNotFoundException("Account", "email", value));
+                    .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_ACCOUNT, "email", value));
             case "NAME", "ALIAS" -> accountDirectoryRepository.findByAlias(value)
-                    .orElseThrow(() -> new ResourceNotFoundException("Account", "alias", value));
+                    .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_ACCOUNT, "alias", value));
             default -> throw new IllegalArgumentException(
                     "Unsupported aliasType: " + aliasType + " (expected VPA | PHONE | EMAIL | NAME)");
         };
