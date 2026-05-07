@@ -3,8 +3,10 @@ package com.payroute.iam.service;
 import com.payroute.iam.dto.response.AuditLogResponse;
 import com.payroute.iam.dto.response.PagedResponse;
 import com.payroute.iam.entity.AuditLog;
+import com.payroute.iam.entity.User;
 import com.payroute.iam.mapper.AuditLogMapper;
 import com.payroute.iam.repository.AuditLogRepository;
+import com.payroute.iam.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +34,7 @@ class AuditServiceTest {
 
     @Mock AuditLogRepository repo;
     @Mock AuditLogMapper mapper;
+    @Mock UserRepository userRepository;
     @InjectMocks AuditService service;
 
     @DisplayName("logAction persists a new AuditLog with the supplied fields")
@@ -60,12 +63,15 @@ class AuditServiceTest {
         assertThat(captor.getValue().getEntityId()).isNull();
     }
 
-    @DisplayName("getAuditLogs returns mapped PagedResponse")
+    @DisplayName("getAuditLogs returns mapped PagedResponse with username enriched from UserRepository")
     @Test
     void getAuditLogs() {
         AuditLog log = AuditLog.builder().id(1L).userId(7L).action("LOGIN").createdAt(LocalDateTime.now()).build();
         Page<AuditLog> page = new PageImpl<>(List.of(log), PageRequest.of(0, 20), 1);
         when(repo.findAll(any(Pageable.class))).thenReturn(page);
+        // Username lookup returns the user's display name for the enrichment step.
+        when(userRepository.findAllById(any()))
+                .thenReturn(List.of(User.builder().id(7L).username("alice").build()));
         lenient().when(mapper.toResponse(any(AuditLog.class)))
                 .thenAnswer(inv -> {
                     AuditLog l = inv.getArgument(0);
@@ -76,6 +82,7 @@ class AuditServiceTest {
 
         assertThat(resp.getContent()).hasSize(1);
         assertThat(resp.getContent().get(0).getAction()).isEqualTo("LOGIN");
+        assertThat(resp.getContent().get(0).getUsername()).isEqualTo("alice");
         assertThat(resp.getTotalElements()).isEqualTo(1);
         assertThat(resp.isLast()).isTrue();
     }
@@ -85,6 +92,8 @@ class AuditServiceTest {
     void getAuditLogsByUser() {
         Page<AuditLog> empty = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
         when(repo.findByUserId(eq(7L), any(Pageable.class))).thenReturn(empty);
+        // Empty page: still need to stub the username lookup (called with empty Set).
+        when(userRepository.findAllById(any())).thenReturn(List.of());
 
         PagedResponse<AuditLogResponse> resp = service.getAuditLogsByUser(7L, PageRequest.of(0, 20));
         assertThat(resp.getContent()).isEmpty();

@@ -88,7 +88,11 @@ public class AuthService {
         return buildAuthResponse(accessToken, refreshToken, user);
     }
 
-    public AuthResponse login(LoginRequest request) {
+    /**
+     * Authenticate via username + password and issue a fresh JWT pair.
+     * The caller-supplied {@code ipAddress} is captured in the audit trail.
+     */
+    public AuthResponse login(LoginRequest request, String ipAddress) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
@@ -100,9 +104,14 @@ public class AuthService {
         String refreshToken = jwtService.generateRefreshToken();
         saveRefreshToken(user.getId(), refreshToken);
 
-        auditService.logAction(user.getId(), "LOGIN", "USER", user.getId(), null, null);
+        auditService.logAction(user.getId(), "LOGIN", "USER", user.getId(), null, ipAddress);
 
         return buildAuthResponse(accessToken, refreshToken, user);
+    }
+
+    /** Backwards-compat overload — used by tests that don't care about IP. */
+    public AuthResponse login(LoginRequest request) {
+        return login(request, null);
     }
 
     public AuthResponse refreshToken(RefreshTokenRequest request) {
@@ -140,6 +149,11 @@ public class AuthService {
      * refresh tokens (forcing other sessions to re-login).
      */
     public AuthResponse changePassword(Long userId, String currentPassword, String newPassword) {
+        return changePassword(userId, currentPassword, newPassword, null);
+    }
+
+    /** Variant that records the caller's IP in the audit trail. */
+    public AuthResponse changePassword(Long userId, String currentPassword, String newPassword, String ipAddress) {
         if (currentPassword == null || newPassword == null) {
             throw new IllegalArgumentException("Current and new passwords are required");
         }
@@ -169,7 +183,7 @@ public class AuthService {
         String refreshToken = jwtService.generateRefreshToken();
         saveRefreshToken(user.getId(), refreshToken);
 
-        auditService.logAction(user.getId(), "PASSWORD_CHANGE", "USER", user.getId(), null, null);
+        auditService.logAction(user.getId(), "PASSWORD_CHANGE", "USER", user.getId(), null, ipAddress);
         log.info("Password changed for user id={}", user.getId());
 
         return buildAuthResponse(accessToken, refreshToken, user);

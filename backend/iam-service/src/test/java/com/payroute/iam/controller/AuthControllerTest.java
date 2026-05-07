@@ -61,7 +61,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("returns 200 + tokens on valid credentials")
         void loginSuccess() throws Exception {
-            when(authService.login(any(LoginRequest.class))).thenReturn(stubAuth("alice"));
+            when(authService.login(any(LoginRequest.class), anyString())).thenReturn(stubAuth("alice"));
 
             mvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -75,7 +75,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("returns 401 when InvalidCredentialsException is thrown")
         void invalidCredentials() throws Exception {
-            when(authService.login(any(LoginRequest.class)))
+            when(authService.login(any(LoginRequest.class), anyString()))
                     .thenThrow(new InvalidCredentialsException("Invalid username or password"));
 
             mvc.perform(post("/api/v1/auth/login")
@@ -183,7 +183,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("returns 200 on successful change")
         void success() throws Exception {
-            when(authService.changePassword(eq(7L), anyString(), anyString())).thenReturn(stubAuth("alice"));
+            when(authService.changePassword(eq(7L), anyString(), anyString(), anyString())).thenReturn(stubAuth("alice"));
 
             mvc.perform(post("/api/v1/auth/change-password")
                             .header("X-User-Id", "7")
@@ -193,13 +193,13 @@ class AuthControllerTest {
                                     "newPassword", "New@Pass1234"))))
                     .andExpect(status().isOk());
 
-            verify(authService).changePassword(7L, "Old@Pass1", "New@Pass1234");
+            verify(authService).changePassword(eq(7L), eq("Old@Pass1"), eq("New@Pass1234"), anyString());
         }
 
         @Test
         @DisplayName("returns 401 when current password is wrong")
         void wrongCurrentPassword() throws Exception {
-            when(authService.changePassword(anyLong(), anyString(), anyString()))
+            when(authService.changePassword(anyLong(), anyString(), anyString(), anyString()))
                     .thenThrow(new InvalidCredentialsException("Current password is incorrect"));
 
             mvc.perform(post("/api/v1/auth/change-password")
@@ -213,7 +213,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("returns 400 on weak new password")
         void weakNewPassword() throws Exception {
-            when(authService.changePassword(anyLong(), anyString(), anyString()))
+            when(authService.changePassword(anyLong(), anyString(), anyString(), anyString()))
                     .thenThrow(new IllegalArgumentException("weak"));
 
             mvc.perform(post("/api/v1/auth/change-password")

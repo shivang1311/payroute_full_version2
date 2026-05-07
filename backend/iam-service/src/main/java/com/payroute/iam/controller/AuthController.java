@@ -9,6 +9,7 @@ import com.payroute.iam.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -29,14 +31,30 @@ public class AuthController {
 
     private final AuthService authService;
 
+    /**
+     * Resolve the caller's IP, preferring `X-Forwarded-For` (set by the API
+     * gateway / any proxy in front) and falling back to the direct socket
+     * remote address. Multi-hop XFF chains keep only the leftmost client IP.
+     */
+    private static String clientIp(HttpServletRequest req) {
+        String xff = req.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            int comma = xff.indexOf(',');
+            return (comma > 0 ? xff.substring(0, comma) : xff).trim();
+        }
+        String real = req.getHeader("X-Real-IP");
+        return Optional.ofNullable(real).filter(s -> !s.isBlank()).orElseGet(req::getRemoteAddr);
+    }
+
     @Operation(summary = "Authenticate user", description = "Authenticate with username and password to obtain JWT tokens")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Authentication successful"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse authResponse = authService.login(request);
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request,
+                                                           HttpServletRequest http) {
+        AuthResponse authResponse = authService.login(request, clientIp(http));
         return ResponseEntity.ok(ApiResponse.success(authResponse, "Login successful"));
     }
 
@@ -74,9 +92,10 @@ public class AuthController {
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse<AuthResponse>> changePassword(
             @RequestHeader("X-User-Id") Long userId,
-            @RequestBody Map<String, String> body) {
+            @RequestBody Map<String, String> body,
+            HttpServletRequest http) {
         AuthResponse resp = authService.changePassword(
-                userId, body.get("currentPassword"), body.get("newPassword"));
+                userId, body.get("currentPassword"), body.get("newPassword"), clientIp(http));
         return ResponseEntity.ok(ApiResponse.success(resp, "Password changed successfully"));
     }
 
