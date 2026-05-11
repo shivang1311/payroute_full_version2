@@ -201,30 +201,35 @@ const AccountDirectoryPage: React.FC = () => {
 
   const columns: ColumnsType<Account> = [
     // Internal id is staff-only — customers don't see it
-    ...(!isCustomer ? [{ title: 'Account ID', dataIndex: 'id', key: 'id', width: 100 }] as ColumnsType<Account> : []),
-    ...(!isCustomer ? [{ title: 'Party Name', dataIndex: 'partyName', key: 'partyName' }] : []),
-    { title: 'Account Number', dataIndex: 'accountNumber', key: 'accountNumber' },
-    { title: 'IFSC/IBAN', dataIndex: 'ifscIban', key: 'ifscIban' },
+    ...(!isCustomer ? [{ title: 'Account ID', dataIndex: 'id', key: 'id', width: 90 }] as ColumnsType<Account> : []),
+    ...(!isCustomer ? [{ title: 'Party Name', dataIndex: 'partyName', key: 'partyName', width: 140, ellipsis: true }] : []),
+    { title: 'Account Number', dataIndex: 'accountNumber', key: 'accountNumber', width: 170 },
+    { title: 'IFSC/IBAN', dataIndex: 'ifscIban', key: 'ifscIban', width: 130 },
     {
       title: 'UPI/VPA ID',
       dataIndex: 'vpaUpiId',
       key: 'vpaUpiId',
+      width: 170,
+      ellipsis: true,
       render: (v: string) => v || '-',
     },
     {
       title: 'Phone',
       dataIndex: 'phone',
       key: 'phone',
+      width: 130,
       render: (v: string) => v || '-',
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      width: 180,
+      ellipsis: true,
       render: (v: string) => v || '-',
     },
     { title: 'Currency', dataIndex: 'currency', key: 'currency', width: 90 },
-    { title: 'Account Type', dataIndex: 'accountType', key: 'accountType' },
+    { title: 'Account Type', dataIndex: 'accountType', key: 'accountType', width: 130 },
     {
       title: 'Active',
       dataIndex: 'active',
@@ -238,12 +243,17 @@ const AccountDirectoryPage: React.FC = () => {
       title: 'Created At',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (val: string) => dayjs(val).format('YYYY-MM-DD HH:mm'),
+      width: 150,
+      render: (val: string) => (
+        <span style={{ whiteSpace: 'nowrap' }}>
+          {dayjs(val).format('YYYY-MM-DD HH:mm')}
+        </span>
+      ),
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 120,
+      width: 100,
       render: (_, record) => (
         <Space>
           <Button
@@ -375,6 +385,8 @@ const AccountDirectoryPage: React.FC = () => {
           columns={columns}
           dataSource={data}
           loading={loading}
+          scroll={{ x: 'max-content' }}
+          size="middle"
           pagination={{
             current: page + 1,
             pageSize,
